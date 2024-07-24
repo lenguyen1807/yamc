@@ -5,13 +5,15 @@
 #include <cstddef>
 #include <cassert>
 #include <iostream>
+#include <functional>
+#include "utils.h"
 
 class Matrix
 {
 public:
     size_t rows;
     size_t cols;
-    std::vector<std::vector<double>> values;
+    MatrixType values;
 
     Matrix(size_t rows, size_t cols);
     Matrix(const Matrix& mat);
@@ -35,8 +37,11 @@ public:
     Matrix& operator+=(const Matrix& mat);
     // Subtract matrix
     Matrix& operator-=(const Matrix& mat);
-    // transpose matrix
+    // Transpose matrix
     Matrix T();
+
+    // Apply a function to matrix
+    Matrix Apply(const std::function<double(double)>& func);
 };
 
 // Add matrix

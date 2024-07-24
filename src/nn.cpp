@@ -1,43 +1,41 @@
 #include "nn.h"
+#include <functional>
+#include <algorithm>
 
-NN::NN(size_t input, size_t hidden, size_t output, std::string activation, double lr)
-: inputSize(input)
-, outputSize(output)
-, hiddenSize(hidden)
-, learningRate(lr)
-{
-    // Set activation
-    if (activation == "ReLU")         { activFunc = new ReLU(); }
-    else if (activation == "Sigmoid") { activFunc = new Sigmoid(); }
+NN::NN(
+    const std::vector<LayerConfig>& hidden,
+    double lr,
+    bool randomInit
+) : m_LearningRate(lr)
+{ 
+    for (size_t i = 0; i < hidden.size(); i++)
+    {
+        size_t input = hidden[i].input;
+        size_t output = hidden[i].output;
+        std::string activation = hidden[i].activation;
 
-    // Set weights
-    ws.emplace("input_hidden", Matrix::Randomized(hiddenSize, inputSize));
-    ws.emplace("bias_hidden", Matrix(hiddenSize, 1)); // initialized bias as 0 matrix
-    ws.emplace("hidden_output", Matrix::Randomized(outputSize, hiddenSize));
-    ws.emplace("bias_output", Matrix(outputSize, 1));
+        LayerPtr layer = std::make_unique<Layer>(input, output, activation, randomInit);
+        m_Layer.emplace_back(std::move(layer));
+    }
+
+    for (size_t i = 0; i < m_Layer.size(); i++)
+    {
+        m_Layer[i]->Print();
+    }
 }
 
-Matrix NN::FeedForward(const Matrix& input)
+MatrixPtr NN::Forward(const Matrix& input)
 {
-    // Input layer value
-    ff.emplace("input", input);
+    // calculate input with one hidden
+    m_Layer[0]->Compute(input);
+    MatrixPtr output = m_Layer[0]->GetOutput();
 
-    // Hidden layer value
-    ff.emplace("hidden", (ws.at("input_hidden") * ff.at("input")) + ws.at("bias_hidden"));
-    ff.emplace("hidden_activ", activFunc->Apply(ff.at("hidden")));
+    // calculate all hidden and output
+    for (size_t i = 1; i < m_Layer.size(); i++)
+    {
+        m_Layer[i]->Compute((*output));
+        output = m_Layer[i]->GetOutput();
+    }
 
-    // Output layer value
-    ff.emplace("output", (ws.at("hidden_output") * ff.at("hidden_activ")) + ws.at("bias_output"));
-    ff.emplace("output_activ", Activation::SoftMax(ff.at("output")));
-
-    return ff.at("output_activ");
-}
-
-void NN::BackProp(const Matrix& output)
-{
-}
-
-void NN::Optimize()
-{
-    
+    return output;
 }

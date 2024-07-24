@@ -7,8 +7,7 @@ Matrix::Matrix(size_t rows, size_t cols)
 : rows(rows)
 , cols(cols)
 , values(rows, std::vector<double>(cols))
-{    
-}
+{}
 
 Matrix::Matrix(const Matrix& mat)
 : rows(mat.rows)
@@ -74,9 +73,8 @@ Matrix Matrix::Randomized(size_t rows, size_t cols)
     std::mt19937 generator(rand_dev());
 
     // https://cs231n.github.io/neural-networks-2/#init
-    double min = -1.0f / sqrt(static_cast<double>(cols));
-    double max = 1.0f / sqrt(static_cast<double>(cols)); 
-    std::uniform_real_distribution<double> distr(min, max);
+    double std = 2.0f / sqrt(static_cast<double>(cols)); 
+    std::uniform_real_distribution<double> distr(0, std);
 
     Matrix res(rows, cols);
     for (size_t i = 0; i < rows; i++)
@@ -137,7 +135,20 @@ Matrix Matrix::T()
     {
         for (size_t j = 0; j < cols; j++)
         {
-            mat.values[j][i] = this->values[j][i];
+            mat.values[j][i] = this->values[i][j];
+        }
+    }
+    return mat;
+}
+
+Matrix Matrix::Apply(const std::function<double(double)>& func)
+{
+    Matrix mat(rows, cols);
+    for (size_t i = 0; i < rows; i++)
+    {
+        for (size_t j = 0; j < cols; j++)
+        {
+            mat.values[i][j] = func(this->values[i][j]);
         }
     }
     return mat;
