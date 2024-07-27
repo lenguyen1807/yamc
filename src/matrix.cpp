@@ -73,8 +73,8 @@ Matrix Matrix::Randomized(size_t rows, size_t cols)
     std::mt19937 generator(rand_dev());
 
     // https://cs231n.github.io/neural-networks-2/#init
-    double std = 2.0f / sqrt(static_cast<double>(cols)); 
-    std::uniform_real_distribution<double> distr(0, std);
+    double std = 2.0f / static_cast<double>(cols); 
+    std::normal_distribution<double> distr(0, std);
 
     Matrix res(rows, cols);
     for (size_t i = 0; i < rows; i++)
@@ -86,6 +86,40 @@ Matrix Matrix::Randomized(size_t rows, size_t cols)
     }
 
     return res;
+}
+
+Matrix Matrix::OneHot(size_t value, size_t classes)
+{
+    Matrix res(classes, 1);
+    for (size_t i = 0; i < classes; i++)
+    {
+        if (i == value)
+            res.values[i][0] = 1;
+    }
+    return res;
+}
+
+double Matrix::Max() const
+{
+    assert(cols == 1);
+    double max = values[0][0];
+    for (size_t i = 1; i < rows; i++)
+    {
+        if (values[i][0] > max)
+            max = values[i][0];
+    }
+    return max;
+}
+
+size_t Matrix::ArgMax() const
+{
+    double max = Max();
+    for (size_t i = 0; i < rows; i++)
+    {
+        if (values[i][0] == max)
+            return i;
+    }
+    return 0;
 }
 
 Matrix& Matrix::operator=(const Matrix& mat)
@@ -123,6 +157,19 @@ Matrix& Matrix::operator+=(const Matrix& mat)
         for (size_t j = 0; j < cols; j++)
         {
             this->values[i][j] += mat.values[i][j];
+        }
+    }
+    return *this;
+}
+
+Matrix& Matrix::operator%=(const Matrix& mat)
+{
+    CheckDimension((*this), mat);
+    for (size_t i = 0; i < rows; i++)
+    {
+        for (size_t j = 0; j < cols; j++)
+        {
+            this->values[i][j] *= mat.values[i][j];
         }
     }
     return *this;

@@ -1,4 +1,5 @@
 #include "utils.h"
+#include "matrix.h"
 #include <cassert>
 #include <iostream>
 
@@ -17,54 +18,36 @@ double Linear(double x)
     return x;
 }
 
-MatrixType SoftMax(const MatrixType& x)
+Matrix SoftMax(const Matrix& x)
 {
-    MatrixType result(x.size(), std::vector<double>(1));
+    // suppose x is a column vector
+    assert(x.cols == 1);
+
+    Matrix result(x.rows, 1);
     double total = 0.0;
 
-    for (size_t i = 0; i < x.size(); i++)
-        total += std::exp(x[i][0]);        
+    for (size_t i = 0; i < x.rows; i++)
+        total += std::exp(x.values[i][0]);        
 
-    for (size_t i = 0; i < x.size(); i++)
+    for (size_t i = 0; i < x.rows; i++)
     {
-        std::vector<double> temp = {std::exp(x[i][0]) / total};
-        result.emplace_back(temp);
+        result.values[i][0] = (std::exp(x.values[i][0]) / total);
     }
 
     return result;
 }
 
-double Accuracy(const MatrixType& pred, const MatrixType& label)
+double CrossEntropyLoss(const Matrix& pred, const Matrix& label)
 {
-    // assume pred and label are vectors
-    assert(pred.size() == label.size());
-    assert(pred[0].size() == 1);
-    assert(label[0].size() == 1);
-
-    // calculate accuracy
-    int eq = 0;
-    for (size_t i = 0; i < pred.size(); i++)
-    {
-        if (pred[i][0] == label[i][0])
-            eq += 1;
-    }
-
-    return eq / static_cast<double>(pred.size()); // or label.size()
-}
-
-double CrossEntropyLoss(const MatrixType& pred, const MatrixType& label, size_t numClass)
-{
-    assert(pred.size() == label.size());
-    assert(pred.size() == numClass);
-
-    // first apply softmax to predict
-    MatrixType predSMax = SoftMax(pred);
+    assert(pred.cols == 1);
+    assert(label.cols == 1);
+    assert(pred.rows == label.rows);
 
     // calculate cross entropy loss
     double entropy = 0.0;
-    for (size_t i = 0; i < numClass; i++)
+    for (size_t i = 0; i < label.rows; i++)
     {
-        entropy += label[i][0] * std::log(pred[i][0]);
+        entropy += label.values[i][0] * std::log(pred.values[i][0]);
     }
     return (-entropy);
 }

@@ -13,12 +13,12 @@
 
 struct Image 
 {
+    MatrixPtr label;
     MatrixPtr data;
-    int label;
 
     Image()
     : label(0)
-    , data(std::make_unique<Matrix>(28, 28))
+    , data(nullptr)
     {}
 };
 
@@ -34,8 +34,9 @@ ImageVector ReadData(const std::string& path) {
     // read remain file
     while (std::getline(openFile, line))
     {
-        size_t idx = -1;
+        int idx = -1;
         ImagePtr img = std::make_unique<Image>();
+        Matrix data(28, 28);
 
         std::stringstream ssLine(line);
         std::string cell;
@@ -44,15 +45,17 @@ ImageVector ReadData(const std::string& path) {
         {
             if (idx == -1) 
             {
-                img->label = std::stoi(cell); 
+                img->label = std::make_unique<Matrix>(Matrix::OneHot(std::stoi(cell), 10));
             }
             else 
             { 
                 size_t j = idx % 28;
-                img->data->values[(idx - j)/28][j] = std::stod(cell); 
+                data.values[(idx - j)/28][j] = std::stod(cell); 
             }
             idx++;
         }
+
+        img->data = std::make_unique<Matrix>(Matrix::Flatten(data));
 
         imgs.emplace_back(std::move(img));
     }

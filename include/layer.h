@@ -17,13 +17,16 @@ public:
     );
 
     void Print();
-    void Compute(const Matrix& input);
+    void Compute(const MatrixPtr& input);
+    void ZeroGradient();
     MatrixPtr GetOutput() const;
 
 private:
     MatrixPtr m_PreActiv;
     MatrixPtr m_AfterActiv;
     MatrixPtr m_Weight;
+    MatrixPtr m_Gradient;
+    std::string m_ActivationName;
     std::function<double(double)> m_Activation;
 };
 

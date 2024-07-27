@@ -13,7 +13,7 @@ class Matrix
 public:
     size_t rows;
     size_t cols;
-    MatrixType values;
+    std::vector<std::vector<double>> values;
 
     Matrix(size_t rows, size_t cols);
     Matrix(const Matrix& mat);
@@ -31,12 +31,21 @@ public:
     // random matrix 
     static Matrix Randomized(size_t rows, size_t cols);
 
+    // create one-hot vector
+    static Matrix OneHot(size_t value, size_t classes);
+
+    // get index of max value in a vector
+    double Max() const;
+    size_t ArgMax() const;
+
     Matrix& operator=(const Matrix& mat);
 
     // Add matrix
     Matrix& operator+=(const Matrix& mat);
     // Subtract matrix
     Matrix& operator-=(const Matrix& mat);
+    // Element wise multiply
+    Matrix& operator%=(const Matrix& mat);
     // Transpose matrix
     Matrix T();
 
@@ -55,6 +64,13 @@ inline Matrix operator+(Matrix mat1, const Matrix& mat2)
 inline Matrix operator-(Matrix mat1, const Matrix& mat2)
 {
     mat1 -= mat2;
+    return mat1;
+}
+
+// Element wise multiply matrix
+inline Matrix operator%(Matrix mat1, const Matrix& mat2)
+{
+    mat1 %= mat2;
     return mat1;
 }
 

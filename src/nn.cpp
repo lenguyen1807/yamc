@@ -2,11 +2,10 @@
 #include <functional>
 #include <algorithm>
 
-NN::NN(
+NeuralNetwork::NeuralNetwork(
     const std::vector<LayerConfig>& hidden,
-    double lr,
     bool randomInit
-) : m_LearningRate(lr)
+) : trainMode(true)
 { 
     for (size_t i = 0; i < hidden.size(); i++)
     {
@@ -17,14 +16,9 @@ NN::NN(
         LayerPtr layer = std::make_unique<Layer>(input, output, activation, randomInit);
         m_Layer.emplace_back(std::move(layer));
     }
-
-    for (size_t i = 0; i < m_Layer.size(); i++)
-    {
-        m_Layer[i]->Print();
-    }
 }
 
-MatrixPtr NN::Forward(const Matrix& input)
+MatrixPtr NeuralNetwork::Forward(const MatrixPtr& input)
 {
     // calculate input with one hidden
     m_Layer[0]->Compute(input);
@@ -33,9 +27,25 @@ MatrixPtr NN::Forward(const Matrix& input)
     // calculate all hidden and output
     for (size_t i = 1; i < m_Layer.size(); i++)
     {
-        m_Layer[i]->Compute((*output));
+        m_Layer[i]->Compute(output);
         output = m_Layer[i]->GetOutput();
     }
 
     return output;
+}
+
+void NeuralNetwork::Print()
+{
+    for (size_t i = 0; i < m_Layer.size(); i++)
+    {
+        m_Layer[i]->Print();
+    }
+}
+
+void NeuralNetwork::ZeroGrad()
+{
+    for (size_t i = 0; i < m_Layer.size(); i++)
+    {
+        m_Layer[i]->ZeroGradient();
+    }
 }

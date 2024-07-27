@@ -7,8 +7,9 @@ Layer::Layer(
     const std::string& activation,
     bool randomInit
 )
-: m_PreActiv(nullptr)
-, m_AfterActiv(nullptr)
+: m_PreActiv(std::make_shared<Matrix>(outputSize, 1))
+, m_AfterActiv(std::make_shared<Matrix>(outputSize, 1))
+, m_Gradient(std::make_shared<Matrix>(outputSize, 1))
 {
     // create weight matrix
     if (randomInit)
@@ -19,6 +20,9 @@ Layer::Layer(
     // lowercase a string
     // https://notfaq.wordpress.com/2007/08/04/cc-convert-string-to-upperlower-case/
     std::string result = activation;
+
+    m_ActivationName = result;
+
     std::transform(result.begin(), result.end(), result.begin(), ::tolower);
 
     if (result == "sigmoid")        m_Activation = Sigmoid;
@@ -30,13 +34,19 @@ Layer::Layer(
 void Layer::Print()
 {
     std::cout << "Input: " << m_Weight->cols << ", "
-              << "Ouput: " << m_Weight->rows << "\n";
+              << "Ouput: " << m_Weight->rows << ", "
+              << "Activation: " << m_ActivationName << "\n";
 }
 
-void Layer::Compute(const Matrix& input)
+void Layer::Compute(const MatrixPtr& input)
 {
-    m_PreActiv = std::make_shared<Matrix>((*m_Weight) * input);
-    m_AfterActiv = std::make_shared<Matrix>((*m_PreActiv).Apply(m_Activation));
+    *m_PreActiv = (*m_Weight) * (*input);
+    *m_AfterActiv = (*m_PreActiv).Apply(m_Activation);
+}
+
+void Layer::ZeroGradient()
+{
+    (*m_Gradient).Fill(0.0);
 }
 
 MatrixPtr Layer::GetOutput() const

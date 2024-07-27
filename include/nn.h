@@ -13,11 +13,26 @@ struct LayerConfig
     std::string activation;
 };
 
-class NN
+struct TrainConfig
+{
+    double lr;
+    size_t epochs;
+    size_t batches = 16;
+    bool batch = false;
+    std::string optimizer;
+};
+
+class NeuralNetwork
 {
 public:
-    NN(const std::vector<LayerConfig>& hidden, double lr, bool randomInit);
-    MatrixPtr Forward(const Matrix& input);
+    bool trainMode;
+
+    NeuralNetwork(const std::vector<LayerConfig>& hidden, bool randomInit);
+
+    MatrixPtr Forward(const MatrixPtr& input);
+
+    void Print();
+    void ZeroGrad();
 
 private:
     size_t m_Input;
