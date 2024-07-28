@@ -18,14 +18,21 @@ public:
 
     void Print();
     void Compute(const MatrixPtr& input);
+    void Gradient(const MatrixPtr& prevGrad, const MatrixPtr& prevLayer);
     void ZeroGradient();
+
     MatrixPtr GetOutput() const;
+    MatrixPtr GetGradient() const;
+    MatrixPtr GetWeight() const;
+    MatrixPtr GetWeightGrad() const;
 
 private:
     MatrixPtr m_PreActiv;
     MatrixPtr m_AfterActiv;
     MatrixPtr m_Weight;
     MatrixPtr m_Gradient;
+    MatrixPtr m_WeightGrad;
+
     std::string m_ActivationName;
     std::function<double(double)> m_Activation;
 };

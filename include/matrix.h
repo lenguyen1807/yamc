@@ -95,4 +95,19 @@ inline Matrix operator*(const Matrix& mat1, const Matrix& mat2)
     return res;
 }
 
+// Scalar multiplication
+inline Matrix operator*(double value, const Matrix& mat)
+{
+    Matrix res(mat.rows, mat.cols);
+
+    for (size_t i = 0; i < mat.rows; i++)
+    {
+        for (size_t j = 0; j < mat.cols; j++)
+        {
+            res.values[i][j] = value * mat.values[i][j];
+        }
+    }
+    return res;
+}
+
 #endif // MATRIX_H
