@@ -13,19 +13,28 @@ project(
 include(cmake/project-is-top-level.cmake)
 include(cmake/variables.cmake)
 
+set(OPENBLAS_FOLDER ${PROJECT_SOURCE_DIR}/extern/OpenBLAS-0.3.28-x64-64)
+
 # ---- Declare library ----
 
 add_library(
     mnist-cpp_lib OBJECT
     source/matrix.cpp
-    source/layer.cpp
     source/utils.cpp
+    source/layer.cpp
 )
 
 target_include_directories(
     mnist-cpp_lib ${warning_guard}
     PUBLIC
     "\$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/source>"
+    ${OPENBLAS_FOLDER}/include # blas directory
+)
+
+target_link_directories(
+  mnist-cpp_lib
+  PUBLIC
+  ${OPENBLAS_FOLDER}/lib
 )
 
 target_compile_features(mnist-cpp_lib PUBLIC cxx_std_17)
@@ -59,3 +68,9 @@ elseif(NOT PROJECT_IS_TOP_LEVEL)
 endif()
 
 include(cmake/dev-mode.cmake)
+
+# Ensure DLLs are copied to output directory
+file(COPY 
+    ${OPENBLAS_FOLDER}/bin/libopenblas.dll
+    DESTINATION ${CMAKE_CURRENT_BINARY_DIR}
+)

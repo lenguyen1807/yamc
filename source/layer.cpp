@@ -7,14 +7,13 @@
 
 nn::Linear::Linear(size_t input_size,
                    size_t output_size,
-                   Activation activation,
+                   activation activ,
                    bool randInit)
     : pre_activ(nullptr)
     , post_activ(nullptr)
     , weight(nullptr)
     , grad(nullptr)
     , weight_grad(nullptr)
-    , activ_func(nullptr)
 {
   if (randInit) {
     weight = std::make_unique<dmat>(dmat::nrand(
@@ -24,14 +23,14 @@ nn::Linear::Linear(size_t input_size,
     weight->fill(0.0);
   }
 
-  switch (activation) {
-    case nn::Activation::LINEAR:
+  switch (activ) {
+    case nn::activation::LINEAR:
       activ_func = nn::F::linear;
       break;
-    case nn::Activation::RELU:
+    case nn::activation::RELU:
       activ_func = nn::F::relu;
       break;
-    case nn::Activation::SIGMOID:
+    case nn::activation::SIGMOID:
       activ_func = nn::F::sigmoid;
       break;
   }
@@ -46,9 +45,9 @@ void nn::Linear::forward(const std::unique_ptr<dmat>& input)
   }
 
   if (post_activ != nullptr) {
-    post_activ = std::make_unique<dmat>(pre_activ->apply(activ_func));
+    post_activ = std::make_unique<dmat>(pre_activ->apply(activ_func, false));
   } else {
-    (*post_activ) = pre_activ->apply(activ_func);
+    (*post_activ) = pre_activ->apply(activ_func, false);
   }
 }
 

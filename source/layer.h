@@ -10,7 +10,6 @@
 template<typename T>
 class matrix;
 
-using func_double = std::function<double(double, bool)>;
 using dmat_ptr = std::unique_ptr<matrix<double>>;
 
 namespace nn
@@ -20,7 +19,7 @@ class Linear
 public:
   Linear(size_t input_size,
          size_t ouput_size,
-         Activation activation,
+         activation activ,
          bool randInit = false);
 
   void forward(const dmat_ptr& input);
@@ -34,7 +33,7 @@ public:
   dmat_ptr weight;
   dmat_ptr grad;
   dmat_ptr weight_grad;
-  func_double activ_func;
+  std::function<double(double, bool)> activ_func;
 };
 }  // namespace nn
 

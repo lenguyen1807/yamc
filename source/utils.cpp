@@ -5,44 +5,6 @@
 
 using namespace nn::F;
 
-double sigmoid(double x, bool grad)
-{
-  if (grad) {
-    return sigmoid(x) * (1 - sigmoid(x));
-  }
-
-  // stable sigmoid
-  // https://stackoverflow.com/questions/51976461/optimal-way-of-defining-a-numerically-stable-sigmoid-function-for-a-list-in-pyth
-  if (x >= 0.0) {
-    return 1.0 / std::exp(-x);
-  }
-  return std::exp(x) / (1.0 + std::exp(x));
-}
-
-double relu(double x, bool grad)
-{
-  if (grad) {
-    return x >= 0.0 ? 1.0 : 0.0;
-  }
-  return x >= 0.0 ? x : 0.0;
-}
-
-double leakyRelu(double x, double slope, bool grad)
-{
-  if (grad) {
-    return x >= 0.0 ? 1.0 : slope;
-  }
-  return x >= 0.0 ? x : x * slope;
-}
-
-double linear(double x, bool grad)
-{
-  if (grad) {
-    return 1.0;
-  }
-  return x;
-}
-
 dmat softmax(const dmat& mat)
 {
   dmat res(mat);

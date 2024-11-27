@@ -6,9 +6,10 @@
 #include <functional>
 #include <iostream>
 #include <random>
+#include <type_traits>
 #include <vector>
 
-#include "utils.h"
+#include "cblas.h"
 
 template<typename T>
 class matrix
@@ -199,10 +200,38 @@ inline auto operator*(const matrix<T>& left, const matrix<T>& right)
     }
   }
 #else
-  // optimize implementation
-  std::cerr << "[ERROR]: Need an implementation \n";
+  if (std::is_same_v<T, float>) {
+    cblas_sgemm(CblasRowMajor,
+                CblasNoTrans,
+                CblasNoTrans,
+                left.rows,
+                right.cols,
+                left.cols,
+                1.0f,
+                left.data,
+                left.cols,
+                right.data,
+                right.cols,
+                0.0f,
+                res.data,
+                res.cols);
+  } else if (std::is_same_v<T, double>) {
+    cblas_dgemm(CblasRowMajor,
+                CblasNoTrans,
+                CblasNoTrans,
+                left.rows,
+                right.cols,
+                left.cols,
+                1.0,
+                left.data,
+                left.cols,
+                right.data,
+                right.cols,
+                0.0,
+                res.data,
+                res.cols);
+  }
 #endif
-
   return res;
 }
 
