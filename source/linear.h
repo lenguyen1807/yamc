@@ -28,6 +28,8 @@ public:
   matrix<double>& get_weight();
   matrix<double>& get_weightgrad();
 
+  void set_weight(const matrix<double>& new_weight);
+
 private:
   matrix<double> m_preactiv;
   matrix<double> m_afteractiv;

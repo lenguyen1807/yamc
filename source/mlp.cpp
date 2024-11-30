@@ -1,3 +1,4 @@
+#include <iostream>
 #include <memory>
 
 #include "linear.h"
@@ -68,7 +69,21 @@ void nn::MLP::optimize()
     for (auto& layer : m_layers) {
       auto weight = layer->get_weight();
       auto weight_grad = layer->get_weightgrad();
-      weight = weight - (weight_grad * m_lr);
+
+      // if (idx == m_layers.size() - 1) {
+      //   std::cout << "Weight: \n";
+      //   weight.print();
+      //   std::cout << "Weight grad: \n";
+      //   weight_grad.print();
+      // }
+
+      layer->set_weight(weight - (weight_grad % m_lr));
+
+      // if (idx == m_layers.size() - 1) {
+      //   std::cout << "New weight: \n";
+      //   layer->get_weight().print();
+      // }
+
       idx++;
     }
   }

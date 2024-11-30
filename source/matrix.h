@@ -25,12 +25,11 @@ class matrix
 public:
   size_t rows;
   size_t cols;
-  T* data;
+  std::vector<T> data;
 
   matrix();
   matrix(size_t rows, size_t cols);
   matrix(const matrix<T>& mat);
-  ~matrix();
 
   // Some methods to create special matrix
   static auto flatten(const matrix<T>& mat) -> matrix<T>;
@@ -64,7 +63,7 @@ public:
   // fill value
   void fill(T value);
 
-  size_t arg_max() const;
+  auto arg_max() const -> size_t;
 
   // apply a function element wise
   // why use that ugly template, the reason is I want to pass a function
@@ -91,23 +90,17 @@ public:
 
 template<typename T>
 matrix<T>::matrix()
-    : rows(0)
-    , cols(0)
-    , data(nullptr)
+    : rows {0}
+    , cols {0}
+    , data {}
 {
-}
-
-template<typename T>
-matrix<T>::~matrix()
-{
-  delete[] this->data;
 }
 
 template<typename T>
 matrix<T>::matrix(size_t rows, size_t cols)
     : rows {rows}
     , cols {cols}
-    , data {new T[rows * cols] {}}
+    , data(rows * cols)
 {
 }
 
@@ -115,7 +108,7 @@ template<typename T>
 matrix<T>::matrix(const matrix<T>& mat)
     : rows {mat.rows}
     , cols {mat.cols}
-    , data {new T[rows * cols] {}}
+    , data(mat.rows * mat.cols)
 {
   for (size_t i = 0; i < rows * cols; i++) {
     data[i] = mat.data[i];
@@ -184,7 +177,7 @@ inline auto operator%(matrix<T> left, const matrix<T>& right) -> matrix<T>
 
 // scalar multiplication
 template<typename T>
-inline auto operator*(const matrix<T>& mat, const T& value) -> matrix<T>
+inline auto operator%(const matrix<T>& mat, const T& value) -> matrix<T>
 {
   matrix<T> res(mat);
   for (size_t i = 0; i < res.rows * res.cols; i++) {
@@ -341,11 +334,11 @@ auto matrix<T>::urand(size_t rows, size_t cols, T range_from, T range_to)
 }
 
 template<typename T>
-size_t matrix<T>::arg_max() const
+auto matrix<T>::arg_max() const -> size_t
 {
   // find max element in array
   // https://stackoverflow.com/questions/73550037/finding-max-value-in-a-array
-  T max_val = *(std::max_element(data, data + (rows * cols)));
+  T max_val = *std::max_element(data.begin(), data.end());
 
   for (size_t i = 0; i < rows * cols; i++) {
     if (data[i] == max_val) {

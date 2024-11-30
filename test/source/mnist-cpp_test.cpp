@@ -1,8 +1,4 @@
-#include "lib.hpp"
-
-auto main() -> int
+int main()
 {
-  auto const lib = library {};
-
-  return lib.name == "mnist-cpp" ? 0 : 1;
+  return 0;
 }

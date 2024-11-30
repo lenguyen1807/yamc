@@ -1,6 +1,7 @@
 #include <chrono>
 
 #include "data.h"
+#include "matrix.h"
 #include "mlp.h"
 #include "utils.h"
 
@@ -14,14 +15,16 @@ auto main() -> int
   // Reading data
   MNISTData train_data(std::string(DATA_PATH) + "test.csv");
   // MNISTData train_data(std::string(DATA_PATH) + "archive/mnist_train.csv");
-  // MNISTData test_data(std::string(DATA_PATH) + "archive/mnist_test.csv");
+  // MNISTData test_data(std::string(DATA_PATHV) + "archive/mnist_test.csv");
 
   // Create neural network model
   // Because softmax will calculate activation so we only need linear activation
   // at the last layer
   nn::MLP model(
       {
-          {784, 128, nn::Activation::RELU},
+          {784, 512, nn::Activation::RELU},
+          {512, 256, nn::Activation::RELU},
+          {256, 128, nn::Activation::RELU},
           {128, 10, nn::Activation::LINEAR},
       },
       /*rand_init=*/true);
@@ -41,10 +44,10 @@ auto main() -> int
     size_t img_idx = 0;
     for (const auto& img : train_data.dataset) {
       // forward pass
-      nn::matrix<double> logits = model.forward(img->data);
+      auto logits = model.forward(img->data);
 
       // apply softmax
-      nn::matrix<double> pred = nn::softmax(logits);
+      auto pred = nn::softmax(logits);
 
       // calculate loss
       double loss = nn::cross_entropy_loss(pred, img->label);
@@ -66,16 +69,40 @@ auto main() -> int
 
       std::cout << "Finish train image no." << img_idx + 1 << " with loss "
                 << loss << "\n";
+
       img_idx++;
     }
 
     std::cout << "Epoch: " << epoch << "\n"
-              << "Train acc: "
+              << "Train accuracy: "
               << train_correct / static_cast<double>(train_data.dataset.size())
               << "\n"
               << "Average train loss: "
               << train_loss / static_cast<double>(train_data.dataset.size())
               << "\n";
+
+    // std::cout << "------------------ Testing -----------------\n";
+    // for (const auto& img : test_data.dataset) {
+    //   // forward pass
+    //   auto logits = model.forward(img->data);
+
+    //   // apply softmax
+    //   auto pred = nn::softmax(logits);
+
+    //   // calculate loss
+    //   double loss = nn::cross_entropy_loss(pred, img->label);
+    //   test_loss += loss;
+
+    //   // calculate accuracy
+    //   size_t pred_label = pred.arg_max();
+    //   size_t true_label = img->label.arg_max();
+    //   test_correct += (pred_label == true_label) ? 1.0 : 0.0;
+    // }
+
+    // std::cout << "Test accuracy: "
+    //           << test_correct / static_cast<double>(test_data.dataset.size())
+    //           << "Average test loss: "
+    //           << test_loss / static_cast<double>(test_data.dataset.size());
 
     // end time counting
     auto end = high_resolution_clock::now();
