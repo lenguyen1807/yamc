@@ -2,32 +2,42 @@
 #define UTILS_H
 
 #include <cmath>
+#include <functional>
 #include <string>
 
-constexpr size_t EPOCHS = 5;
-
-template<typename T>
-class matrix;
+constexpr size_t EPOCHS = 1;
+constexpr size_t SEED = 1234;
 
 namespace nn
 {
 
-enum class activation
+// forward declaration
+template<typename T>
+class matrix;
+
+enum class Loss
+{
+  CROSS_ENTROPY_LOSS
+};
+
+enum class Optimizer
+{
+  SGD
+};
+
+enum class Activation
 {
   LINEAR,
   SIGMOID,
   RELU,
 };
 
-struct layer_config
+struct LayerConfig
 {
   size_t input;
   size_t output;
-  activation activation;
+  Activation activation;
 };
-
-namespace F
-{
 
 inline double sigmoid(double x, bool grad = false)
 {
@@ -60,10 +70,14 @@ inline double linear(double x, bool grad = false)
 }
 
 matrix<double> softmax(const matrix<double>& mat);
-double crossEntropyLoss(const matrix<double>& pred,
-                        const matrix<double>& label);
+double cross_entropy_loss(const matrix<double>& pred,
+                          const matrix<double>& label);
 
-}  // namespace F
 }  // namespace nn
+
+// helper function get activation name
+std::string activation_name(nn::Activation activ);
+std::string optimizer_name(nn::Optimizer optim);
+std::string loss_name(nn::Loss loss);
 
 #endif  // UTILS_H

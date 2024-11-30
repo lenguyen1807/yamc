@@ -3,11 +3,11 @@
 #include "matrix.h"
 #include "utils.h"
 
-using namespace nn::F;
-
-dmat softmax(const dmat& mat)
+namespace nn
 {
-  dmat res(mat);
+matrix<double> softmax(const matrix<double>& mat)
+{
+  matrix<double> res(mat);
   double total = 0.0;
 
   for (size_t i = 0; i < res.rows; i++) {
@@ -21,7 +21,8 @@ dmat softmax(const dmat& mat)
   return res;
 }
 
-double crossEntropyLoss(const matrix<double>& pred, const matrix<double>& label)
+double cross_entropy_loss(const matrix<double>& pred,
+                          const matrix<double>& label)
 {
   assert(pred.cols == 1);
   assert(label.cols == 1);
@@ -33,4 +34,33 @@ double crossEntropyLoss(const matrix<double>& pred, const matrix<double>& label)
     entropy += label.data[i] * std::log(pred.data[i]);
   }
   return (-entropy);
+}
+}  // namespace nn
+
+std::string activation_name(nn::Activation activ)
+{
+  switch (activ) {
+    case nn::Activation::LINEAR:
+      return "Linear";
+    case nn::Activation::RELU:
+      return "ReLU";
+    case nn::Activation::SIGMOID:
+      return "Sigmoid";
+  }
+}
+
+std::string optimizer_name(nn::Optimizer optim)
+{
+  switch (optim) {
+    case nn::Optimizer::SGD:
+      return "SGD";
+  }
+}
+
+std::string loss_name(nn::Loss loss)
+{
+  switch (loss) {
+    case nn::Loss::CROSS_ENTROPY_LOSS:
+      return "Cross Entropy Loss";
+  }
 }

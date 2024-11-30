@@ -1,6 +1,7 @@
 #ifndef MATRIX_H
 #define MATRIX_H
 
+#include <algorithm>
 #include <cassert>
 #include <cstddef>
 #include <functional>
@@ -9,7 +10,14 @@
 #include <type_traits>
 #include <vector>
 
-#include "cblas.h"
+#include "utils.h"
+
+#ifdef GEMM_OPT
+#  include "cblas.h"
+#endif
+
+namespace nn
+{
 
 template<typename T>
 class matrix
@@ -19,7 +27,7 @@ public:
   size_t cols;
   T* data;
 
-  matrix() = delete;
+  matrix();
   matrix(size_t rows, size_t cols);
   matrix(const matrix<T>& mat);
   ~matrix();
@@ -33,8 +41,8 @@ public:
       -> matrix<T>;
   static auto onehot(size_t value, std::vector<T> classes) -> matrix<T>;
 
-  // Some operators
   auto operator=(matrix<T> mat) -> matrix<T>&;
+
   // Why do we use this swap function ?
   // It is from copy-and-swap idiom
   friend void mat_swap(matrix<T>& first, matrix<T>& second)
@@ -51,33 +59,43 @@ public:
       -> matrix<T>&;  // this is element-wise multiply
 
   // matrix transpose
-  auto t() -> matrix<T>;
+  auto t() const -> matrix<T>;
 
   // fill value
   void fill(T value);
+
+  size_t arg_max() const;
 
   // apply a function element wise
   // why use that ugly template, the reason is I want to pass a function
   // with arbitrary number of parameters
   // ... is called variadic template
   template<typename Func, typename... Args>
-  auto apply(Func&& func, Args&&... args) -> matrix<T>
+  auto apply(Func func, Args... args) const -> matrix<T>
   {
     matrix<T> new_mat(rows, cols);
     for (size_t i = 0; i < rows * cols; i++) {
-      new_mat.data[i] = func(data[i], std::forward<Args>(args)...);
+      new_mat.data[i] = func(data[i], args...);
     }
     return new_mat;
   }
 
   // print function
-  void print();
+  void print() const;
 
   void check_dim(const matrix<T>& mat)
   {
     assert(rows == mat.rows && cols == mat.cols);
   }
 };
+
+template<typename T>
+matrix<T>::matrix()
+    : rows(0)
+    , cols(0)
+    , data(nullptr)
+{
+}
 
 template<typename T>
 matrix<T>::~matrix()
@@ -246,7 +264,7 @@ void matrix<T>::fill(T value)
 }
 
 template<typename T>
-auto matrix<T>::t() -> matrix<T>
+auto matrix<T>::t() const -> matrix<T>
 {
   matrix<T> res(cols, rows);
   for (size_t i = 0; i < rows; i++) {
@@ -258,7 +276,7 @@ auto matrix<T>::t() -> matrix<T>
 }
 
 template<typename T>
-void matrix<T>::print()
+void matrix<T>::print() const
 {
   std::cout << "Rows: " << rows << "\n";
   std::cout << "Cols: " << cols << "\n";
@@ -296,6 +314,7 @@ auto matrix<T>::nrand(size_t rows, size_t cols, T mu, T std) -> matrix<T>
 {
   std::random_device rand_dev;
   std::mt19937 generator(rand_dev());
+  generator.seed(SEED);
   std::normal_distribution<T> distr(mu, std);
 
   matrix<T> res(rows, cols);
@@ -311,6 +330,7 @@ auto matrix<T>::urand(size_t rows, size_t cols, T range_from, T range_to)
 {
   std::random_device rand_dev;
   std::mt19937 generator(rand_dev());
+  generator.seed(SEED);
   std::uniform_real_distribution<T> distr(range_from, range_to);
 
   matrix<T> res(rows, cols);
@@ -320,11 +340,23 @@ auto matrix<T>::urand(size_t rows, size_t cols, T range_from, T range_to)
   return res;
 }
 
-// some convenient aliases
+template<typename T>
+size_t matrix<T>::arg_max() const
+{
+  // find max element in array
+  // https://stackoverflow.com/questions/73550037/finding-max-value-in-a-array
+  T max_val = *(std::max_element(data, data + (rows * cols)));
 
+  for (size_t i = 0; i < rows * cols; i++) {
+    if (data[i] == max_val) {
+      return i;
+    }
+  }
+}
+
+// some convenient aliases
 using dmat = matrix<double>;
-using imat = matrix<int>;
-using fmat = matrix<float>;
-using lmat = matrix<long>;
+
+}  // namespace nn
 
 #endif  // MATRIX_H

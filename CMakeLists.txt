@@ -21,7 +21,9 @@ add_library(
     mnist-cpp_lib OBJECT
     source/matrix.cpp
     source/utils.cpp
-    source/layer.cpp
+    source/linear.cpp
+    source/mlp.cpp
+    source/data.cpp
 )
 
 target_include_directories(
@@ -55,6 +57,9 @@ target_link_libraries(mnist-cpp_exe PRIVATE mnist-cpp_lib)
 if(NOT CMAKE_SKIP_INSTALL_RULES)
   include(cmake/install-rules.cmake)
 endif()
+
+# Path to data folder
+add_compile_definitions(DATA_PATH="${PROJECT_SOURCE_DIR}/data/")
 
 # ---- Developer mode ----
 
