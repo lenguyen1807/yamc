@@ -194,9 +194,10 @@ inline auto operator*(const matrix<T>& left, const matrix<T>& right)
 {
   assert(left.cols == right.rows);
 
-  size_t cols = right.cols;
   size_t rows = left.rows;
+  size_t cols = right.cols;
   size_t inners = right.rows;  // can be left.cols
+
   matrix<T> res(rows, cols);
 
 #ifndef GEMM_OPT
@@ -205,43 +206,26 @@ inline auto operator*(const matrix<T>& left, const matrix<T>& right)
     for (size_t j = 0; j < cols; j++) {
       T prod {};
       for (size_t k = 0; k < inners; k++) {
-        prod += left.data[i * cols + k] * right.data[k * cols + j];
+        prod += left.data[i * inners + k] * right.data[k * cols + j];
       }
       res.data[i * cols + j] = prod;
     }
   }
 #else
-  if (std::is_same_v<T, float>) {
-    cblas_sgemm(CblasRowMajor,
-                CblasNoTrans,
-                CblasNoTrans,
-                left.rows,
-                right.cols,
-                left.cols,
-                1.0f,
-                left.data,
-                left.cols,
-                right.data,
-                right.cols,
-                0.0f,
-                res.data,
-                res.cols);
-  } else if (std::is_same_v<T, double>) {
-    cblas_dgemm(CblasRowMajor,
-                CblasNoTrans,
-                CblasNoTrans,
-                left.rows,
-                right.cols,
-                left.cols,
-                1.0,
-                left.data,
-                left.cols,
-                right.data,
-                right.cols,
-                0.0,
-                res.data,
-                res.cols);
-  }
+  cblas_dgemm(CblasRowMajor,
+              CblasNoTrans,
+              CblasNoTrans,
+              rows,
+              cols,
+              inners,
+              1.0,
+              left.data.data(),
+              inners,
+              right.data.data(),
+              cols,
+              0.0,
+              res.data.data(),
+              cols);
 #endif
   return res;
 }
@@ -262,7 +246,7 @@ auto matrix<T>::t() const -> matrix<T>
   matrix<T> res(cols, rows);
   for (size_t i = 0; i < rows; i++) {
     for (size_t j = 0; j < cols; j++) {
-      res.data[j * rows + i] = data[cols * i + j];
+      res.data[j * rows + i] = data[i * cols + j];
     }
   }
   return res;
@@ -307,7 +291,6 @@ auto matrix<T>::nrand(size_t rows, size_t cols, T mu, T std) -> matrix<T>
 {
   std::random_device rand_dev;
   std::mt19937 generator(rand_dev());
-  generator.seed(SEED);
   std::normal_distribution<T> distr(mu, std);
 
   matrix<T> res(rows, cols);
@@ -323,7 +306,6 @@ auto matrix<T>::urand(size_t rows, size_t cols, T range_from, T range_to)
 {
   std::random_device rand_dev;
   std::mt19937 generator(rand_dev());
-  generator.seed(SEED);
   std::uniform_real_distribution<T> distr(range_from, range_to);
 
   matrix<T> res(rows, cols);
