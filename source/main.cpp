@@ -16,8 +16,10 @@ int main()
 
   // Reading data
   // MNISTData train_data(std::string(DATA_PATH) + "test.csv");
-  MNISTData train_data(std::string(DATA_PATH) + "archive/mnist_train.csv");
-  MNISTData test_data(std::string(DATA_PATH) + "archive/mnist_test.csv");
+  MNISTData train_data(std::string(DATA_PATH)
+                       + "fashion_mnist/fashion-mnist_train.csv");
+  MNISTData test_data(std::string(DATA_PATH)
+                      + "fashion_mnist/fashion-mnist_test.csv");
 
   // Create neural network model
   // Because softmax will calculate activation so we only need linear activation
