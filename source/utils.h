@@ -20,11 +20,6 @@ enum class Loss
   CROSS_ENTROPY_LOSS
 };
 
-enum class Optimizer
-{
-  SGD
-};
-
 enum class Activation
 {
   LINEAR,
@@ -77,7 +72,6 @@ double cross_entropy_loss(const matrix<double>& pred,
 
 // helper function get activation name
 std::string activation_name(nn::Activation activ);
-std::string optimizer_name(nn::Optimizer optim);
 std::string loss_name(nn::Loss loss);
 
 #endif  // UTILS_H

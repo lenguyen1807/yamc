@@ -49,14 +49,6 @@ std::string activation_name(nn::Activation activ)
   }
 }
 
-std::string optimizer_name(nn::Optimizer optim)
-{
-  switch (optim) {
-    case nn::Optimizer::SGD:
-      return "SGD";
-  }
-}
-
 std::string loss_name(nn::Loss loss)
 {
   switch (loss) {

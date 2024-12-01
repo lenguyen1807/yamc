@@ -19,14 +19,14 @@ public:
 
   void print();
   void compute(const matrix<double>& input);
-  void grad(const matrix<double>& prev_grad, const matrix<double>& prev_layer);
+  void grad(const matrix<double>& after_grad, const matrix<double>& prev_layer);
   void zero_grad();
 
-  matrix<double>& get_output();
-  matrix<double>& get_preactiv();
-  matrix<double>& get_grad();
-  matrix<double>& get_weight();
-  matrix<double>& get_weightgrad();
+  const matrix<double>& get_output() const;
+  const matrix<double>& get_preactiv() const;
+  const matrix<double>& get_grad() const;
+  const matrix<double>& get_weight() const;
+  const matrix<double>& get_weightgrad() const;
 
   void set_weight(const matrix<double>& new_weight);
 

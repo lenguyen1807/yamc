@@ -7,14 +7,10 @@
 
 nn::MLP::MLP(const std::vector<nn::LayerConfig>& hidden_configs,
              bool rand_init,
-             nn::Optimizer optimizer,
-             nn::Loss loss_fn,
-             double learning_rate)
+             nn::Loss loss_fn)
     : m_input(hidden_configs.front().input)
     , m_output(hidden_configs.back().output)
-    , m_optim(optimizer)
     , m_loss(loss_fn)
-    , m_lr(learning_rate)
 {
   m_layers.reserve(hidden_configs.size());
   for (const auto& config : hidden_configs) {
@@ -56,36 +52,9 @@ void nn::MLP::backward(const nn::matrix<double>& pred,
   matrix<double> grad = m_layers[last_idx]->get_grad();
 
   // calculate gradient of other layers
-  for (size_t i = last_idx - 1; i > 1; i--) {
+  for (size_t i = last_idx; i-- > 1;) {
     m_layers[i]->grad(grad, m_layers[i - 1]->get_output());
     grad = m_layers[i]->get_grad();
-  }
-}
-
-void nn::MLP::optimize()
-{
-  if (m_optim == nn::Optimizer::SGD) {
-    int idx = 0;
-    for (auto& layer : m_layers) {
-      auto weight = layer->get_weight();
-      auto weight_grad = layer->get_weightgrad();
-
-      // if (idx == m_layers.size() - 1) {
-      //   std::cout << "Weight: \n";
-      //   weight.print();
-      //   std::cout << "Weight grad: \n";
-      //   weight_grad.print();
-      // }
-
-      layer->set_weight(weight - (weight_grad % m_lr));
-
-      // if (idx == m_layers.size() - 1) {
-      //   std::cout << "New weight: \n";
-      //   layer->get_weight().print();
-      // }
-
-      idx++;
-    }
   }
 }
 
@@ -94,9 +63,6 @@ void nn::MLP::print()
   for (const auto& layer : m_layers) {
     layer->print();
   }
-  std::cout << "Learning rate: " << m_lr << "\n";
-  std::cout << "Optimizer: " << optimizer_name(m_optim) << "\n";
-  std::cout << "Loss: " << loss_name(m_loss) << "\n";
 }
 
 void nn::MLP::zero_grad()

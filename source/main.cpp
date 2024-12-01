@@ -1,11 +1,13 @@
+#define GEMM_OPT
+
 #include <chrono>
 
 #include "data.h"
-#include "matrix.h"
 #include "mlp.h"
+#include "optimizer.h"
 #include "utils.h"
 
-auto main() -> int
+int main()
 {
   // Time checking
   using std::chrono::duration;
@@ -13,9 +15,9 @@ auto main() -> int
   using std::chrono::milliseconds;
 
   // Reading data
-  MNISTData train_data(std::string(DATA_PATH) + "test.csv");
-  // MNISTData train_data(std::string(DATA_PATH) + "archive/mnist_train.csv");
-  // MNISTData test_data(std::string(DATA_PATHV) + "archive/mnist_test.csv");
+  // MNISTData train_data(std::string(DATA_PATH) + "test.csv");
+  MNISTData train_data(std::string(DATA_PATH) + "archive/mnist_train.csv");
+  MNISTData test_data(std::string(DATA_PATH) + "archive/mnist_test.csv");
 
   // Create neural network model
   // Because softmax will calculate activation so we only need linear activation
@@ -28,6 +30,9 @@ auto main() -> int
           {128, 10, nn::Activation::LINEAR},
       },
       /*rand_init=*/true);
+
+  // Create SGD optimizer
+  nn::SGD optimizer(&model, 0.001);
 
   // training and testing
   for (size_t epoch = 1; epoch <= EPOCHS; epoch++) {
@@ -61,8 +66,8 @@ auto main() -> int
       // backward pass
       model.backward(pred, img->label);
 
-      // optimize
-      model.optimize();
+      // update weight
+      optimizer.step();
 
       // zero all gradients for next iteration
       model.zero_grad();
@@ -82,33 +87,33 @@ auto main() -> int
               << "\n";
 
     // std::cout << "------------------ Testing -----------------\n";
-    // for (const auto& img : test_data.dataset) {
-    //   // forward pass
-    //   auto logits = model.forward(img->data);
+    for (const auto& img : test_data.dataset) {
+      // forward pass
+      auto logits = model.forward(img->data);
 
-    //   // apply softmax
-    //   auto pred = nn::softmax(logits);
+      // apply softmax
+      auto pred = nn::softmax(logits);
 
-    //   // calculate loss
-    //   double loss = nn::cross_entropy_loss(pred, img->label);
-    //   test_loss += loss;
+      // calculate loss
+      double loss = nn::cross_entropy_loss(pred, img->label);
+      test_loss += loss;
 
-    //   // calculate accuracy
-    //   size_t pred_label = pred.arg_max();
-    //   size_t true_label = img->label.arg_max();
-    //   test_correct += (pred_label == true_label) ? 1.0 : 0.0;
-    // }
+      // calculate accuracy
+      size_t pred_label = pred.arg_max();
+      size_t true_label = img->label.arg_max();
+      test_correct += (pred_label == true_label) ? 1.0 : 0.0;
+    }
 
-    // std::cout << "Test accuracy: "
-    //           << test_correct / static_cast<double>(test_data.dataset.size())
-    //           << "Average test loss: "
-    //           << test_loss / static_cast<double>(test_data.dataset.size());
+    std::cout << "Test accuracy: "
+              << test_correct / static_cast<double>(test_data.dataset.size())
+              << "Average test loss: "
+              << test_loss / static_cast<double>(test_data.dataset.size());
 
     // end time counting
     auto end = high_resolution_clock::now();
     duration<double, std::milli> time = end - start;
 
-    std::cout << "Time: " << time.count() << "ms";
+    std::cout << "Time: " << time.count() / 60000.0 << " minutes";
   }
 
   return 0;

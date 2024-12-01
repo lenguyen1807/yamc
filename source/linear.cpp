@@ -46,29 +46,11 @@ void nn::Linear::grad(const matrix<double>& after_grad,
   // step 1: compute gradient for after-activation layer
   auto grad = after_grad % (m_preactiv.apply(m_activfunc, true));
 
-  // std::cout << "After grad: \n";
-  // after_grad.print();
-
-  // std::cout << "Current grad: \n";
-  // grad.print();
-
-  // std::cout << "Previous layer: \n";
-  // prev_layer.print();
-
   // step 2: compute gradient respect to weight
   m_weightgrad = grad * prev_layer.t();
 
-  // std::cout << "Weight grad: \n";
-  // m_weightgrad.print();
-
   // step 3: compute gradient for pre-activation layer
   m_grad = m_weight.t() * grad;
-
-  // std::cout << "Gradient: \n";
-  // m_grad.print();
-
-  // std::cout << "Weight: \n";
-  // m_weight.print();
 }
 
 void nn::Linear::zero_grad()
@@ -77,27 +59,27 @@ void nn::Linear::zero_grad()
   m_grad.fill(0.0);
 }
 
-nn::matrix<double>& nn::Linear::get_output()
+const nn::matrix<double>& nn::Linear::get_output() const
 {
   return m_afteractiv;
 }
 
-nn::matrix<double>& nn::Linear::get_grad()
+const nn::matrix<double>& nn::Linear::get_grad() const
 {
   return m_grad;
 }
 
-nn::matrix<double>& nn::Linear::get_weight()
+const nn::matrix<double>& nn::Linear::get_weight() const
 {
   return m_weight;
 }
 
-nn::matrix<double>& nn::Linear::get_weightgrad()
+const nn::matrix<double>& nn::Linear::get_weightgrad() const
 {
   return m_weightgrad;
 }
 
-nn::matrix<double>& nn::Linear::get_preactiv()
+const nn::matrix<double>& nn::Linear::get_preactiv() const
 {
   return m_preactiv;
 }
