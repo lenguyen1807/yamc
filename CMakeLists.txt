@@ -13,31 +13,54 @@ project(
 include(cmake/project-is-top-level.cmake)
 include(cmake/variables.cmake)
 
+# --- Find header macro ---
+# https://stackoverflow.com/questions/17653738/recursive-cmake-search-for-header-and-source-files
+MACRO(HEADER_DIRECTORIES return_list)
+    FILE(GLOB_RECURSE new_list *.h)
+    SET(dir_list "")
+    FOREACH(file_path ${new_list})
+        GET_FILENAME_COMPONENT(dir_path ${file_path} PATH)
+        SET(dir_list ${dir_list} ${dir_path})
+    ENDFOREACH()
+    LIST(REMOVE_DUPLICATES dir_list)
+    SET(${return_list} ${dir_list})
+ENDMACRO()
+
+# ---- Declare library ----
+
 set(OPENBLAS_FOLDER ${PROJECT_SOURCE_DIR}/extern/OpenBLAS-0.3.28-x64-64)
 if(NOT EXISTS "${OPENBLAS_FOLDER}")
     message(FATAL_ERROR "OpenBLAS folder not found: ${OPENBLAS_FOLDER}")
 endif()
 
-
-# ---- Declare library ----
-
 add_library(
     mnist-cpp_lib OBJECT
-    source/matrix.cpp
+    source/core/matrix.cpp
     source/utils.cpp
-    source/linear.cpp
-    source/mlp.cpp
+    source/net/linear.cpp
+    source/net/mlp.cpp
     source/data.cpp
-    source/optimizer.cpp
-    source/loss.cpp
+    source/core/optimizer.cpp
+    source/core/loss.cpp
 )
+
+HEADER_DIRECTORIES(header_dir_list)
+
+list(LENGTH header_dir_list header_dir_list_count)
+message(STATUS "[INFO] Found ${header_dir_list_count} header directories.")
 
 target_include_directories(
     mnist-cpp_lib ${warning_guard}
     PUBLIC
-    "$<BUILD_INTERFACE:${OPENBLAS_FOLDER}/include>" # openblas
+    ${header_dir_list}
     "\$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/source>"
 )
+
+# link openmp
+find_package(OpenMP)
+if(OpenMP_CXX_FOUND)
+    target_link_libraries(mnist-cpp_lib OpenMP::OpenMP_CXX)
+endif()
 
 target_link_libraries(
   mnist-cpp_lib

@@ -10,6 +10,8 @@
 #include <type_traits>
 #include <vector>
 
+#include <omp.h>
+
 #include "utils.h"
 
 #ifdef GEMM_OPT
@@ -23,22 +25,21 @@ template<typename T>
 class matrix
 {
 public:
-  size_t rows;
-  size_t cols;
+  int rows;
+  int cols;
   std::vector<T> data;
 
   matrix();
-  matrix(size_t rows, size_t cols);
+  matrix(int rows, int cols);
   matrix(const matrix<T>& mat);
 
   // Some methods to create special matrix
   static auto flatten(const matrix<T>& mat) -> matrix<T>;
   // random with normal distribution
-  static auto nrand(size_t rows, size_t cols, T mu, T std) -> matrix<T>;
+  static auto nrand(int rows, int cols, T mu, T std) -> matrix<T>;
   // random with uniform distribution
-  static auto urand(size_t rows, size_t cols, T range_from, T range_to)
-      -> matrix<T>;
-  static auto onehot(size_t value, std::vector<T> classes) -> matrix<T>;
+  static auto urand(int rows, int cols, T range_from, T range_to) -> matrix<T>;
+  static auto onehot(int value, std::vector<T> classes) -> matrix<T>;
 
   auto operator=(matrix<T> mat) -> matrix<T>&;
 
@@ -63,7 +64,7 @@ public:
   // fill value
   void fill(T value);
 
-  auto arg_max() const -> size_t;
+  auto arg_max() const -> int;
 
   // apply a function element wise
   // why use that ugly template, the reason is I want to pass a function
@@ -73,7 +74,8 @@ public:
   auto apply(Func func, Args... args) const -> matrix<T>
   {
     matrix<T> new_mat(rows, cols);
-    for (size_t i = 0; i < rows * cols; i++) {
+#pragma omp parallel for
+    for (int i = 0; i < rows * cols; i++) {
       new_mat.data[i] = func(data[i], args...);
     }
     return new_mat;
@@ -97,7 +99,7 @@ matrix<T>::matrix()
 }
 
 template<typename T>
-matrix<T>::matrix(size_t rows, size_t cols)
+matrix<T>::matrix(int rows, int cols)
     : rows {rows}
     , cols {cols}
     , data(rows * cols)
@@ -110,7 +112,7 @@ matrix<T>::matrix(const matrix<T>& mat)
     , cols {mat.cols}
     , data(mat.rows * mat.cols)
 {
-  for (size_t i = 0; i < rows * cols; i++) {
+  for (int i = 0; i < rows * cols; i++) {
     data[i] = mat.data[i];
   }
 }
@@ -128,7 +130,8 @@ template<typename T>
 auto matrix<T>::operator+=(const matrix<T>& mat) -> matrix<T>&
 {
   this->check_dim(mat);
-  for (size_t i = 0; i < rows * cols; i++) {
+#pragma omp parallel for
+  for (int i = 0; i < rows * cols; i++) {
     data[i] += mat.data[i];
   }
   return *this;
@@ -145,7 +148,8 @@ template<typename T>
 auto matrix<T>::operator-=(const matrix<T>& mat) -> matrix<T>&
 {
   this->check_dim(mat);
-  for (size_t i = 0; i < rows * cols; i++) {
+#pragma omp parallel for
+  for (int i = 0; i < rows * cols; i++) {
     data[i] -= mat.data[i];
   }
   return *this;
@@ -162,7 +166,8 @@ template<typename T>
 auto matrix<T>::operator%=(const matrix<T>& mat) -> matrix<T>&
 {
   this->check_dim(mat);
-  for (size_t i = 0; i < rows * cols; i++) {
+#pragma omp parallel for
+  for (int i = 0; i < rows * cols; i++) {
     data[i] *= mat.data[i];
   }
   return *this;
@@ -180,7 +185,8 @@ template<typename T>
 inline auto operator%(const matrix<T>& mat, const T& value) -> matrix<T>
 {
   matrix<T> res(mat);
-  for (size_t i = 0; i < res.rows * res.cols; i++) {
+#pragma omp parallel for
+  for (int i = 0; i < res.rows * res.cols; i++) {
     res.data[i] *= value;
   }
   return res;
@@ -194,18 +200,18 @@ inline auto operator*(const matrix<T>& left, const matrix<T>& right)
 {
   assert(left.cols == right.rows);
 
-  size_t rows = left.rows;
-  size_t cols = right.cols;
-  size_t inners = right.rows;  // can be left.cols
+  int rows = left.rows;
+  int cols = right.cols;
+  int inners = right.rows;  // can be left.cols
 
   matrix<T> res(rows, cols);
 
 #ifndef GEMM_OPT
   // naive implementation
-  for (size_t i = 0; i < rows; i++) {
-    for (size_t j = 0; j < cols; j++) {
+  for (int i = 0; i < rows; i++) {
+    for (int j = 0; j < cols; j++) {
       T prod {};
-      for (size_t k = 0; k < inners; k++) {
+      for (int k = 0; k < inners; k++) {
         prod += left.data[i * inners + k] * right.data[k * cols + j];
       }
       res.data[i * cols + j] = prod;
@@ -235,7 +241,7 @@ inline auto operator*(const matrix<T>& left, const matrix<T>& right)
 template<typename T>
 void matrix<T>::fill(T value)
 {
-  for (size_t i = 0; i < rows * cols; i++) {
+  for (int i = 0; i < rows * cols; i++) {
     data[i] = value;
   }
 }
@@ -244,8 +250,9 @@ template<typename T>
 auto matrix<T>::t() const -> matrix<T>
 {
   matrix<T> res(cols, rows);
-  for (size_t i = 0; i < rows; i++) {
-    for (size_t j = 0; j < cols; j++) {
+#pragma omp parallel for
+  for (int i = 0; i < rows; i++) {
+    for (int j = 0; j < cols; j++) {
       res.data[j * rows + i] = data[i * cols + j];
     }
   }
@@ -257,8 +264,8 @@ void matrix<T>::print() const
 {
   std::cout << "Rows: " << rows << "\n";
   std::cout << "Cols: " << cols << "\n";
-  for (size_t i = 0; i < rows; i++) {
-    for (size_t j = 0; j < cols; j++) {
+  for (int i = 0; i < rows; i++) {
+    for (int j = 0; j < cols; j++) {
       std::cout << data[i * cols + j] << " ";
     }
     std::cout << "\n";
@@ -277,52 +284,51 @@ auto matrix<T>::flatten(const matrix<T>& mat) -> matrix<T>
 }
 
 template<typename T>
-auto matrix<T>::onehot(size_t value, std::vector<T> classes) -> matrix<T>
+auto matrix<T>::onehot(int value, std::vector<T> classes) -> matrix<T>
 {
   matrix<T> res(classes.size(), 1);
-  for (size_t i = 0; i < classes.size(); i++) {
+  for (int i = 0; i < classes.size(); i++) {
     res.data[i] = classes[i] == value ? 1 : 0;
   }
   return res;
 }
 
 template<typename T>
-auto matrix<T>::nrand(size_t rows, size_t cols, T mu, T std) -> matrix<T>
+auto matrix<T>::nrand(int rows, int cols, T mu, T std) -> matrix<T>
 {
   std::random_device rand_dev;
   std::mt19937 generator(rand_dev());
   std::normal_distribution<T> distr(mu, std);
 
   matrix<T> res(rows, cols);
-  for (size_t i = 0; i < rows * cols; i++) {
+  for (int i = 0; i < rows * cols; i++) {
     res.data[i] = distr(generator);
   }
   return res;
 }
 
 template<typename T>
-auto matrix<T>::urand(size_t rows, size_t cols, T range_from, T range_to)
-    -> matrix<T>
+auto matrix<T>::urand(int rows, int cols, T range_from, T range_to) -> matrix<T>
 {
   std::random_device rand_dev;
   std::mt19937 generator(rand_dev());
   std::uniform_real_distribution<T> distr(range_from, range_to);
 
   matrix<T> res(rows, cols);
-  for (size_t i = 0; i < rows * cols; i++) {
+  for (int i = 0; i < rows * cols; i++) {
     res.data[i] = distr(generator);
   }
   return res;
 }
 
 template<typename T>
-auto matrix<T>::arg_max() const -> size_t
+auto matrix<T>::arg_max() const -> int
 {
   // find max element in array
   // https://stackoverflow.com/questions/73550037/finding-max-value-in-a-array
   T max_val = *std::max_element(data.begin(), data.end());
 
-  for (size_t i = 0; i < rows * cols; i++) {
+  for (int i = 0; i < rows * cols; i++) {
     if (data[i] == max_val) {
       return i;
     }
