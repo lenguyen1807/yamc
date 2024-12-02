@@ -17,11 +17,10 @@ public:
   friend class nn::Optimizer;
 
   explicit MLP(const std::vector<LayerConfig>& hidden_configs,
-               bool rand_init = true,
-               Loss loss_fn = nn::Loss::CROSS_ENTROPY_LOSS);
+               bool rand_init = true);
 
   auto forward(const matrix<double>& input) -> matrix<double>;
-  void backward(const matrix<double>& pred, const matrix<double>& label);
+  void backward(const matrix<double>& loss_grad);
 
   void print();
   void zero_grad();
@@ -29,7 +28,6 @@ public:
 private:
   size_t m_input;
   size_t m_output;
-  Loss m_loss;
   std::vector<std::unique_ptr<Linear>> m_layers;
 };
 }  // namespace nn

@@ -15,11 +15,6 @@ namespace nn
 template<typename T>
 class matrix;
 
-enum class Loss
-{
-  CROSS_ENTROPY_LOSS
-};
-
 enum class Activation
 {
   LINEAR,
@@ -65,13 +60,10 @@ inline double linear(double x, bool grad = false)
 }
 
 matrix<double> softmax(const matrix<double>& mat);
-double cross_entropy_loss(const matrix<double>& pred,
-                          const matrix<double>& label);
 
 }  // namespace nn
 
 // helper function get activation name
 std::string activation_name(nn::Activation activ);
-std::string loss_name(nn::Loss loss);
 
 #endif  // UTILS_H

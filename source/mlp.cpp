@@ -4,12 +4,9 @@
 #include "mlp.h"
 #include "utils.h"
 
-nn::MLP::MLP(const std::vector<nn::LayerConfig>& hidden_configs,
-             bool rand_init,
-             nn::Loss loss_fn)
+nn::MLP::MLP(const std::vector<nn::LayerConfig>& hidden_configs, bool rand_init)
     : m_input(hidden_configs.front().input)
     , m_output(hidden_configs.back().output)
-    , m_loss(loss_fn)
 {
   m_layers.reserve(hidden_configs.size());
   for (const auto& config : hidden_configs) {
@@ -32,17 +29,8 @@ auto nn::MLP::forward(const nn::matrix<double>& input) -> nn::matrix<double>
   return output;
 }
 
-void nn::MLP::backward(const nn::matrix<double>& pred,
-                       const nn::matrix<double>& label)
+void nn::MLP::backward(const matrix<double>& loss_grad)
 {
-  // calculate gradient with of loss
-  matrix<double> loss_grad;
-  switch (m_loss) {
-    case nn::Loss::CROSS_ENTROPY_LOSS:
-      loss_grad = pred - label;
-      break;
-  }
-
   size_t last_idx = m_layers.size() - 1;
 
   // calculate gradient of the output

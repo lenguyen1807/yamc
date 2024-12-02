@@ -29,6 +29,7 @@ add_library(
     source/mlp.cpp
     source/data.cpp
     source/optimizer.cpp
+    source/loss.cpp
 )
 
 target_include_directories(

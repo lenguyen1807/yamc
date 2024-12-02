@@ -3,6 +3,7 @@
 #include <chrono>
 
 #include "data.h"
+#include "loss.h"
 #include "mlp.h"
 #include "optimizer.h"
 #include "utils.h"
@@ -24,15 +25,18 @@ int main()
   // at the last layer
   nn::MLP model(
       {
-          {784, 512, nn::Activation::RELU},
-          {512, 256, nn::Activation::RELU},
-          {256, 128, nn::Activation::RELU},
-          {128, 10, nn::Activation::LINEAR},
+          {784, 500, nn::Activation::RELU},
+          {500, 300, nn::Activation::RELU},
+          {300, 100, nn::Activation::RELU},
+          {100, 10, nn::Activation::LINEAR},
       },
       /*rand_init=*/true);
 
   // Create SGD optimizer
-  nn::SGD optimizer(&model, 0.001);
+  nn::SGD optimizer(&model, /*learning_rate=*/0.001);
+
+  // Create loss function
+  nn::CrossEntropyLoss loss_fn(&model);
 
   // training and testing
   for (size_t epoch = 1; epoch <= EPOCHS; epoch++) {
@@ -51,20 +55,17 @@ int main()
       // forward pass
       auto logits = model.forward(img->data);
 
-      // apply softmax
-      auto pred = nn::softmax(logits);
-
       // calculate loss
-      double loss = nn::cross_entropy_loss(pred, img->label);
+      double loss = loss_fn(logits, img->label);
       train_loss += loss;
 
       // calculate accuracy
-      size_t pred_label = pred.arg_max();
+      size_t pred_label = loss_fn.get_pred().arg_max();
       size_t true_label = img->label.arg_max();
       train_correct += (pred_label == true_label) ? 1.0 : 0.0;
 
       // backward pass
-      model.backward(pred, img->label);
+      loss_fn.backward(img->label);
 
       // update weight
       optimizer.step();
@@ -91,23 +92,22 @@ int main()
       // forward pass
       auto logits = model.forward(img->data);
 
-      // apply softmax
-      auto pred = nn::softmax(logits);
-
       // calculate loss
-      double loss = nn::cross_entropy_loss(pred, img->label);
+      double loss = loss_fn(logits, img->label);
       test_loss += loss;
 
       // calculate accuracy
-      size_t pred_label = pred.arg_max();
+      size_t pred_label = loss_fn.get_pred().arg_max();
       size_t true_label = img->label.arg_max();
       test_correct += (pred_label == true_label) ? 1.0 : 0.0;
     }
 
     std::cout << "Test accuracy: "
               << test_correct / static_cast<double>(test_data.dataset.size())
+              << "\n"
               << "Average test loss: "
-              << test_loss / static_cast<double>(test_data.dataset.size());
+              << test_loss / static_cast<double>(test_data.dataset.size())
+              << "\n";
 
     // end time counting
     auto end = high_resolution_clock::now();

@@ -21,20 +21,6 @@ matrix<double> softmax(const matrix<double>& mat)
   return res;
 }
 
-double cross_entropy_loss(const matrix<double>& pred,
-                          const matrix<double>& label)
-{
-  assert(pred.cols == 1);
-  assert(label.cols == 1);
-  assert(pred.rows == label.rows);
-
-  // calculate cross entropy loss
-  double entropy = 0.0;
-  for (size_t i = 0; i < label.rows; i++) {
-    entropy += label.data[i] * std::log(pred.data[i]);
-  }
-  return (-entropy);
-}
 }  // namespace nn
 
 std::string activation_name(nn::Activation activ)
@@ -46,13 +32,5 @@ std::string activation_name(nn::Activation activ)
       return "ReLU";
     case nn::Activation::SIGMOID:
       return "Sigmoid";
-  }
-}
-
-std::string loss_name(nn::Loss loss)
-{
-  switch (loss) {
-    case nn::Loss::CROSS_ENTROPY_LOSS:
-      return "Cross Entropy Loss";
   }
 }
