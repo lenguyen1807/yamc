@@ -1,4 +1,3 @@
-#include <iostream>
 #include <memory>
 
 #include "linear.h"
@@ -23,8 +22,7 @@ auto nn::MLP::forward(const nn::matrix<double>& input) -> nn::matrix<double>
 {
   // calculate input with first hidden layer
   m_layers[0]->compute(input);
-
-  matrix<double> output = m_layers[0]->get_output();
+  auto output = m_layers[0]->get_output();
 
   for (size_t i = 1; i < m_layers.size(); i++) {
     m_layers[i]->compute(output);
@@ -49,7 +47,7 @@ void nn::MLP::backward(const nn::matrix<double>& pred,
 
   // calculate gradient of the output
   m_layers[last_idx]->grad(loss_grad, m_layers[last_idx - 1]->get_output());
-  matrix<double> grad = m_layers[last_idx]->get_grad();
+  auto grad = m_layers[last_idx]->get_grad();
 
   // calculate gradient of other layers
   for (size_t i = last_idx; i-- > 1;) {
