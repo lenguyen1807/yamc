@@ -239,6 +239,7 @@ inline auto operator*(const matrix<T>& left, const matrix<T>& right)
 template<typename T>
 void matrix<T>::fill(T value)
 {
+#pragma omp parallel for
   for (int i = 0; i < rows * cols; i++) {
     data[i] = value;
   }
@@ -285,6 +286,7 @@ template<typename T>
 auto matrix<T>::onehot(int value, std::vector<T> classes) -> matrix<T>
 {
   matrix<T> res(classes.size(), 1);
+#pragma omp parallel for
   for (int i = 0; i < classes.size(); i++) {
     res.data[i] = classes[i] == value ? 1 : 0;
   }
@@ -299,6 +301,7 @@ auto matrix<T>::nrand(int rows, int cols, T mu, T std) -> matrix<T>
   std::normal_distribution<T> distr(mu, std);
 
   matrix<T> res(rows, cols);
+#pragma omp parallel for
   for (int i = 0; i < rows * cols; i++) {
     res.data[i] = distr(generator);
   }
@@ -313,6 +316,7 @@ auto matrix<T>::urand(int rows, int cols, T range_from, T range_to) -> matrix<T>
   std::uniform_real_distribution<T> distr(range_from, range_to);
 
   matrix<T> res(rows, cols);
+#pragma omp parallel for
   for (int i = 0; i < rows * cols; i++) {
     res.data[i] = distr(generator);
   }
@@ -332,9 +336,6 @@ auto matrix<T>::arg_max() const -> int
     }
   }
 }
-
-// some convenient aliases
-using dmat = matrix<double>;
 
 }  // namespace nn
 

@@ -38,11 +38,11 @@ int main()
   // Create loss function
   nn::CrossEntropyLoss loss_fn(&model);
 
+  // start time counting
+  auto start = high_resolution_clock::now();
+
   // training and testing
   for (size_t epoch = 1; epoch <= EPOCHS; epoch++) {
-    // start time counting
-    auto start = high_resolution_clock::now();
-
     float train_correct {};
     float test_correct {};
     float train_loss {};
@@ -108,13 +108,13 @@ int main()
               << "Average test loss: "
               << test_loss / static_cast<float>(test_data.dataset.size())
               << "\n";
-
-    // end time counting
-    auto end = high_resolution_clock::now();
-    duration<float, std::milli> time = end - start;
-
-    std::cout << "Time: " << time.count() / 60000.0 << " minutes";
   }
+
+  // end time counting
+  auto end = high_resolution_clock::now();
+  duration<float, std::milli> time = end - start;
+
+  std::cout << "Time: " << time.count() / 60000.0 << " minutes";
 
   return 0;
 }
