@@ -5,10 +5,10 @@
 
 namespace nn
 {
-matrix<double> softmax(const matrix<double>& mat)
+matrix<float> softmax(const matrix<float>& mat)
 {
-  matrix<double> res(mat);
-  double total = 0.0;
+  matrix<float> res(mat);
+  float total = 0.0;
 
   for (size_t i = 0; i < res.rows; i++) {
     total += std::exp(res.data[i]);

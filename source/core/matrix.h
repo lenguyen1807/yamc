@@ -12,8 +12,6 @@
 
 #include <omp.h>
 
-#include "utils.h"
-
 #ifdef GEMM_OPT
 #  include "cblas.h"
 #endif

@@ -29,7 +29,7 @@ struct LayerConfig
   Activation activation;
 };
 
-inline double sigmoid(double x, bool grad = false)
+inline float sigmoid(float x, bool grad = false)
 {
   if (grad) {
     return sigmoid(x) * (1 - sigmoid(x));
@@ -43,7 +43,7 @@ inline double sigmoid(double x, bool grad = false)
   return std::exp(x) / (1.0 + std::exp(x));
 }
 
-inline double relu(double x, bool grad = false)
+inline float relu(float x, bool grad = false)
 {
   if (grad) {
     return x >= 0.0 ? 1.0 : 0.0;
@@ -51,7 +51,7 @@ inline double relu(double x, bool grad = false)
   return x >= 0.0 ? x : 0.0;
 }
 
-inline double linear(double x, bool grad = false)
+inline float linear(float x, bool grad = false)
 {
   if (grad) {
     return 1.0;
@@ -59,7 +59,7 @@ inline double linear(double x, bool grad = false)
   return x;
 }
 
-matrix<double> softmax(const matrix<double>& mat);
+matrix<float> softmax(const matrix<float>& mat);
 
 }  // namespace nn
 

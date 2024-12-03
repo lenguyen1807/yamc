@@ -17,13 +17,13 @@ protected:
 class SGD : public Optimizer
 {
 public:
-  SGD(MLP* model, double learning_rate);
+  SGD(MLP* model, float learning_rate);
 
   void step() override;
 
 private:
   MLP* m_pmodel;
-  double m_lr;
+  float m_lr;
 };
 }  // namespace nn
 

@@ -15,7 +15,7 @@ nn::MLP::MLP(const std::vector<nn::LayerConfig>& hidden_configs, bool rand_init)
   }
 }
 
-auto nn::MLP::forward(const nn::matrix<double>& input) -> nn::matrix<double>
+auto nn::MLP::forward(const nn::matrix<float>& input) -> nn::matrix<float>
 {
   // calculate input with first hidden layer
   m_layers[0]->compute(input);
@@ -29,7 +29,7 @@ auto nn::MLP::forward(const nn::matrix<double>& input) -> nn::matrix<double>
   return output;
 }
 
-void nn::MLP::backward(const matrix<double>& loss_grad)
+void nn::MLP::backward(const matrix<float>& loss_grad)
 {
   size_t last_idx = m_layers.size() - 1;
 

@@ -15,20 +15,20 @@ public:
   virtual T operator()(const matrix<T>& logits, const matrix<T>& label) = 0;
 };
 
-class CrossEntropyLoss : public Loss<double>
+class CrossEntropyLoss : public Loss<float>
 {
 public:
   CrossEntropyLoss(MLP* model);
 
-  void backward(const matrix<double>& label) override;
-  double operator()(const matrix<double>& logits,
-                    const matrix<double>& label) override;
+  void backward(const matrix<float>& label) override;
+  float operator()(const matrix<float>& logits,
+                   const matrix<float>& label) override;
 
-  const matrix<double>& get_pred() const;
+  const matrix<float>& get_pred() const;
 
 private:
   MLP* m_pmodel;
-  matrix<double> m_pred;
+  matrix<float> m_pred;
 };
 };  // namespace nn
 

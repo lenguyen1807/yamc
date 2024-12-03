@@ -9,8 +9,8 @@
 struct image
 {
   // one hot vector for label
-  nn::matrix<double> label;
-  nn::matrix<double> data;
+  nn::matrix<float> label;
+  nn::matrix<float> data;
 };
 
 struct MNISTData

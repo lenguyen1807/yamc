@@ -19,8 +19,8 @@ public:
   explicit MLP(const std::vector<LayerConfig>& hidden_configs,
                bool rand_init = true);
 
-  auto forward(const matrix<double>& input) -> matrix<double>;
-  void backward(const matrix<double>& loss_grad);
+  auto forward(const matrix<float>& input) -> matrix<float>;
+  void backward(const matrix<float>& loss_grad);
 
   void print();
   void zero_grad();

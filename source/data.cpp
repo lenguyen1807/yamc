@@ -19,15 +19,15 @@ MNISTData::MNISTData(const std::string& path)
     std::stringstream ss(line);
     std::string cell;
     image img;
-    img.data = nn::matrix<double>(28 * 28, 1);
+    img.data = nn::matrix<float>(28 * 28, 1);
 
     // hack to parse csv file type
     while (std::getline(ss, cell, ',')) {
       if (idx == -1) {
-        img.label = nn::matrix<double>::onehot(std::stoi(cell),
-                                               {0, 1, 2, 3, 4, 5, 6, 7, 8, 9});
+        img.label = nn::matrix<float>::onehot(std::stoi(cell),
+                                              {0, 1, 2, 3, 4, 5, 6, 7, 8, 9});
       } else {
-        img.data.data[idx] = std::stod(cell);
+        img.data.data[idx] = std::stof(cell);
       }
       idx++;
     }

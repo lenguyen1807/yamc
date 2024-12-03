@@ -6,7 +6,7 @@ auto& nn::Optimizer::get_layers(MLP* model)
   return model->m_layers;
 }
 
-nn::SGD::SGD(MLP* model, double learning_rate)
+nn::SGD::SGD(MLP* model, float learning_rate)
     : m_pmodel(model)
     , m_lr(learning_rate)
 {

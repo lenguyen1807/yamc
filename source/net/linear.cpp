@@ -1,5 +1,3 @@
-#include <iostream>
-
 #include "linear.h"
 #include "matrix.h"
 #include "utils.h"
@@ -17,8 +15,8 @@ nn::Linear::Linear(size_t input_size,
 {
   if (rand_init) {
     // https://cs231n.github.io/neural-networks-2/#init
-    this->m_weight = matrix<double>::nrand(
-        output_size, input_size, 0.0, 2.0 / static_cast<double>(input_size));
+    this->m_weight = matrix<float>::nrand(
+        output_size, input_size, 0.0, 2.0 / static_cast<float>(input_size));
   }
 
   switch (m_activ) {
@@ -34,14 +32,14 @@ nn::Linear::Linear(size_t input_size,
   }
 }
 
-void nn::Linear::compute(const matrix<double>& input)
+void nn::Linear::compute(const matrix<float>& input)
 {
   m_preactiv = m_weight * input;
   m_afteractiv = m_preactiv.apply(m_activfunc, false);
 }
 
-void nn::Linear::grad(const matrix<double>& after_grad,
-                      const matrix<double>& prev_layer)
+void nn::Linear::grad(const matrix<float>& after_grad,
+                      const matrix<float>& prev_layer)
 {
   // step 1: compute gradient for after-activation layer
   auto grad = after_grad % (m_preactiv.apply(m_activfunc, true));
@@ -59,27 +57,27 @@ void nn::Linear::zero_grad()
   m_grad.fill(0.0);
 }
 
-const nn::matrix<double>& nn::Linear::get_output() const
+const nn::matrix<float>& nn::Linear::get_output() const
 {
   return m_afteractiv;
 }
 
-const nn::matrix<double>& nn::Linear::get_grad() const
+const nn::matrix<float>& nn::Linear::get_grad() const
 {
   return m_grad;
 }
 
-const nn::matrix<double>& nn::Linear::get_weight() const
+const nn::matrix<float>& nn::Linear::get_weight() const
 {
   return m_weight;
 }
 
-const nn::matrix<double>& nn::Linear::get_weightgrad() const
+const nn::matrix<float>& nn::Linear::get_weightgrad() const
 {
   return m_weightgrad;
 }
 
-const nn::matrix<double>& nn::Linear::get_preactiv() const
+const nn::matrix<float>& nn::Linear::get_preactiv() const
 {
   return m_preactiv;
 }
@@ -91,7 +89,7 @@ void nn::Linear::print()
             << ", activation=" << activation_name(m_activ) << ")\n";
 }
 
-void nn::Linear::set_weight(const nn::matrix<double>& new_weight)
+void nn::Linear::set_weight(const nn::matrix<float>& new_weight)
 {
   m_weight = new_weight;
 }

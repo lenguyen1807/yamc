@@ -18,27 +18,27 @@ public:
          bool rand_init = false);
 
   void print();
-  void compute(const matrix<double>& input);
-  void grad(const matrix<double>& after_grad, const matrix<double>& prev_layer);
+  void compute(const matrix<float>& input);
+  void grad(const matrix<float>& after_grad, const matrix<float>& prev_layer);
   void zero_grad();
 
-  const matrix<double>& get_output() const;
-  const matrix<double>& get_preactiv() const;
-  const matrix<double>& get_grad() const;
-  const matrix<double>& get_weight() const;
-  const matrix<double>& get_weightgrad() const;
+  const matrix<float>& get_output() const;
+  const matrix<float>& get_preactiv() const;
+  const matrix<float>& get_grad() const;
+  const matrix<float>& get_weight() const;
+  const matrix<float>& get_weightgrad() const;
 
-  void set_weight(const matrix<double>& new_weight);
+  void set_weight(const matrix<float>& new_weight);
 
 private:
-  matrix<double> m_preactiv;
-  matrix<double> m_afteractiv;
-  matrix<double> m_weight;
-  matrix<double> m_weightgrad;
-  matrix<double> m_grad;
+  matrix<float> m_preactiv;
+  matrix<float> m_afteractiv;
+  matrix<float> m_weight;
+  matrix<float> m_weightgrad;
+  matrix<float> m_grad;
 
   Activation m_activ;
-  std::function<double(double, bool)> m_activfunc;
+  std::function<float(float, bool)> m_activfunc;
 };
 }  // namespace nn
 

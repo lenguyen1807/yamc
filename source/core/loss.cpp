@@ -7,8 +7,8 @@ nn::CrossEntropyLoss::CrossEntropyLoss(MLP* model)
 {
 }
 
-double nn::CrossEntropyLoss::operator()(const nn::matrix<double>& logits,
-                                        const nn::matrix<double>& label)
+float nn::CrossEntropyLoss::operator()(const nn::matrix<float>& logits,
+                                       const nn::matrix<float>& label)
 {
   assert(logits.cols == 1);
   assert(label.cols == 1);
@@ -18,20 +18,20 @@ double nn::CrossEntropyLoss::operator()(const nn::matrix<double>& logits,
   m_pred = nn::softmax(logits);
 
   // calculate cross entropy loss
-  double entropy = 0.0;
+  float entropy = 0.0;
   for (size_t i = 0; i < label.rows; i++) {
     entropy += label.data[i] * std::log(m_pred.data[i]);
   }
   return (-entropy);
 }
 
-void nn::CrossEntropyLoss::backward(const nn::matrix<double>& label)
+void nn::CrossEntropyLoss::backward(const nn::matrix<float>& label)
 {
   auto loss_grad = m_pred - label;
   m_pmodel->backward(loss_grad);
 }
 
-const nn::matrix<double>& nn::CrossEntropyLoss::get_pred() const
+const nn::matrix<float>& nn::CrossEntropyLoss::get_pred() const
 {
   return m_pred;
 }
