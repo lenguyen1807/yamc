@@ -1,6 +1,7 @@
 #ifndef DATA_H
 #define DATA_H
 
+#include <memory>
 #include <string>
 #include <vector>
 

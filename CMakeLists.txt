@@ -106,6 +106,8 @@ target_compile_features(mnist-cpp_exe PRIVATE cxx_std_17)
 
 target_link_libraries(mnist-cpp_exe PRIVATE mnist-cpp_lib)
 
+SET( CMAKE_CXX_FLAGS  "-O2 -DNDEBUG -std=c++17")
+
 # ---- Install rules ----
 
 if(NOT CMAKE_SKIP_INSTALL_RULES)

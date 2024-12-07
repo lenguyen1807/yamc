@@ -114,7 +114,7 @@ int main()
   auto end = high_resolution_clock::now();
   duration<float, std::milli> time = end - start;
 
-  std::cout << "Time: " << time.count() / 60000.0 << " minutes";
+  std::cout << "Time: " << time.count() / 60000.0 << " minutes\n";
 
   return 0;
 }
