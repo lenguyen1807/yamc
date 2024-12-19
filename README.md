@@ -1,40 +1,27 @@
-# Neural Networks from Scratch in C++
+> NOTE: This project is generate with cmake-init, so writing a building instruction is a waste of time (actually I don't know how to make a build instruction).
 
-## How to run
+**TL'DR**: This is the rewrite branch of my old source (few months ago), the old version took about 37 minutes to finish training and testing when the new version only took 9 minutes (insane improvement).
 
-- Make sure have installed `CMake`.
-- Make directory `build` and:
-```bash
-cd build
-cmake ..
-make
-```
+---
 
-## Usage
+<img src="result_old.png">
+The old version
 
-- Change `EPOCHS` parameter in `utils.h` (default to 1).
-- Can implement more optimizer in `nn.cpp` or implement more loss function in `nn.cpp` too.
+---
 
-## Result
+<img src="result_new.png">
+The new version but without optimization flag (took about 72 minutes LOL).
 
-<img src="./result.png" alt="Result image">
+---
 
-- Train with only 1 epoch.
-- Test accuracy: 93%.
-- Used memory: 1.6 GB.
-- Train on 60000 MNIST images and test on 10000 MNIST images, data in `archives.zip` in `data` folder.
-- Neural Network has 3 hidden layers. Used SGD (Stochastic Gradient Descent) for learning process.
+<img src="result_Ofast.png">
+The new version but using `-Ofast` optimization flag.
 
-## What can be done
+---
 
-- [x] Use SGD (Stochastic Gradient Descent) for opitmization algorithm.
-- [ ] Implement mini-batch.
-- [ ] Implement momentum to SGD.
-- [ ] Implement more optimization algorithm (AdaGrad, AdamW).
-- [ ] Implement Dropout (prevent overfitting).
-- [ ] Implement Batch Normalization.
-- [ ] Use GPU.
+<img src="result_O2.png">
+The new version with `-O2` optimization flag.
 
-## Resources
+---
 
-- https://github.com/lionelmessi6410/Neural-Networks-from-Scratch/tree/main?tab=readme-ov-file
+Seeing more on my blog: https://lenguyen.vercel.app/projects/cpp-nn
