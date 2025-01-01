@@ -57,6 +57,12 @@ if (NOT OpenMP_FOUND)
     message(FATAL_ERROR "OpenMP not found")
 endif()
 
+# Find OpenCV package
+find_package(OpenCV REQUIRED)
+if (NOT OpenCV_FOUND)
+    message(FATAL_ERROR "OpenMP not found")
+endif()
+
 # Include libcurl to fetch data
 # include(FetchContent)
 # FetchContent_Declare(curl
@@ -92,13 +98,14 @@ if(APPLE)
     SET(CMAKE_CXX_FLAGS "-O2 -DNDEBUG -std=c++17 -ftree-vectorize -L/opt/homebrew/opt/libomp/lib -I/opt/homebrew/opt/libomp/include -DACCELERATE_LAPACK_ILP64 -DACCELERATE_NEW_LAPACK")
     target_link_libraries(${PROJECT_NAME} PRIVATE 
         OpenMP::OpenMP_CXX 
+        ${OpenCV_LIBS}
         ${ACCELERATE_LIBRARY} 
         ${FOUNDATION_LIBRARY} 
         ${METAL_LIBRARY} 
         ${QUARTZCORE_LIBRARY})
 else()
     SET(CMAKE_CXX_FLAGS "-O2 -DNDEBUG -std=c++17 -ftree-vectorize")
-    target_link_libraries(${PROJECT_NAME} PRIVATE OpenMP::OpenMP_CXX)
+    target_link_libraries(${PROJECT_NAME} PRIVATE OpenMP::OpenMP_CXX ${OpenCV_LIBS})
 endif()
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)

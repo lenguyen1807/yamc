@@ -1,4 +1,5 @@
 #include "linear.h"
+#include "optimizer.h"
 
 using namespace nn;
 
@@ -48,4 +49,9 @@ void Linear::set_parameter(const matrix<float>& new_weight,
 {
   m_W = new_weight;
   m_b = new_bias;
+}
+
+void Linear::accept_optimizer(Optimizer* optim)
+{
+  optim->visit_linear(this);
 }
