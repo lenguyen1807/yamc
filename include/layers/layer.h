@@ -16,11 +16,12 @@ template<typename T>
 class Layer
 {
 public:
-  virtual matrix<T> forward(const matrix<T>& input) {};
-  virtual matrix<T> backward(const matrix<T>& grad) {};
+  virtual matrix<T> forward(const matrix<T>& input) = 0;
+  virtual matrix<T> backward(const matrix<T>& grad) = 0;
+  virtual void print_stats() {}
   virtual void zero_grad() {}
   virtual void accept_optimizer(Optimizer* optim) {}
-  virtual ~Layer() {}
+  virtual ~Layer() {};
 
 protected:
   matrix<T> m_input;

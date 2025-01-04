@@ -18,11 +18,17 @@ public:
 
   void zero_grad() override;
   void accept_optimizer(Optimizer* optim) override;
-  void set_parameter(const matrix<float>& new_weight,
-                     const matrix<float>& new_bias);
+  void print_stats() override;
+  void set_weight(const matrix<float>& new_weight);
+  void set_bias(const matrix<float>& bias);
 
   matrix<float> get_bias() const { return m_b; }
   matrix<float> get_weight() const { return m_W; }
+  matrix<float> get_weightgrad() const { return m_dW; }
+  matrix<float> get_biasgrad() const { return m_db; }
+
+public:
+  bool is_bias;
 
 private:
   // bias
@@ -35,8 +41,6 @@ private:
   matrix<float> m_dx;
   // bias gradient
   matrix<float> m_db;
-  // is bias ?
-  bool m_bias;
 };
 };  // namespace nn
 

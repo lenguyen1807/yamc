@@ -1,4 +1,4 @@
-#include "dropout.h"
+#include "layers/dropout.h"
 
 using namespace nn;
 

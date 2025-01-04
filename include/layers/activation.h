@@ -6,7 +6,6 @@
 namespace nn
 {
 // An activation function is also a layer
-// But it should be an implement of layer
 class ReLU : public Layer<float>
 {
 public:

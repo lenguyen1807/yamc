@@ -43,12 +43,23 @@ public:
   {
   }
 
+  explicit matrix(const std::vector<std::vector<T>>& input)
+      : rows(input.size())
+      , cols(rows != 0 ? input[0].size() : 0)
+      , data(rows * cols)
+  {
+    for (size_t i = 0; i < input.size(); i++) {
+      for (size_t j = 0; j < input[i].size(); j++) {
+        data[i * cols + j] = input[i][j];
+      }
+    }
+  }
+
   matrix(const matrix<T>& mat)
       : rows(mat.rows)
       , cols(mat.cols)
       , data(rows * cols)
   {
-#pragma omp parallel for
     for (size_t i = 0; i < rows * cols; i++) {
       data[i] = mat.data[i];
     }
@@ -61,7 +72,6 @@ public:
       , cols(mat.cols)
       , data(rows * cols)
   {
-#pragma omp parallel for
     for (size_t i = 0; i < rows * cols; i++) {
       data[i] = static_cast<T>(mat.data[i]);
     }
@@ -86,15 +96,9 @@ public:
   matrix<T>& operator+=(const matrix<T>& mat)
   {
     check_dim(mat);
-#ifdef __APPLE__
-    catlas_saxpby(
-        rows * cols, 1.0f, mat.data.data(), 1, 1.0f, this->data.data(), 1);
-#else
-#  pragma omp parallel for
     for (size_t i = 0; i < rows * cols; i++) {
       data[i] += mat.data[i];
     }
-#endif
     return *this;
   }
 
@@ -102,7 +106,6 @@ public:
   matrix<T> operator-() const
   {
     matrix<T> res(*this);
-#pragma omp parallel for
     for (size_t i = 0; i < rows * cols; i++) {
       res.data[i] = -data[i];
     }
@@ -113,7 +116,6 @@ public:
   matrix<T>& operator%=(const matrix<T>& mat)
   {
     check_dim(mat);
-#pragma omp parallel for
     for (size_t i = 0; i < rows * cols; i++) {
       data[i] *= mat.data[i];
     }
@@ -123,7 +125,6 @@ public:
   matrix<bool> operator>(const T& value) const
   {
     matrix<bool> res(this->rows, this->cols);
-#pragma omp parallel for
     for (size_t i = 0; i < rows * cols; i++) {
       res.data[i] = data[i] > value ? true : false;
     }
@@ -133,9 +134,8 @@ public:
   matrix<bool> operator<(const T& value) const
   {
     matrix<bool> res(this->rows, this->cols);
-#pragma omp parallel for
     for (size_t i = 0; i < rows * cols; i++) {
-      res.data[i] = data[i] > value ? true : false;
+      res.data[i] = data[i] < value ? true : false;
     }
     return res;
   }
@@ -149,7 +149,6 @@ public:
   matrix<T> apply(Func func, Args... args) const
   {
     matrix<T> new_mat(rows, cols);
-#pragma omp parallel for
     for (size_t i = 0; i < rows * cols; i++) {
       new_mat.data[i] = func(data[i], args...);
     }
@@ -159,7 +158,6 @@ public:
   /* Some ultility functions */
   void fill(const T& value)
   {
-#pragma omp parallel for
     for (size_t i = 0; i < rows * cols; i++) {
       data[i] = value;
     }
@@ -169,7 +167,6 @@ public:
   matrix<T> t() const
   {
     matrix<T> res(cols, rows);
-#pragma omp parallel for
     for (size_t i = 0; i < rows; i++) {
       for (size_t j = 0; j < cols; j++) {
         res.data[j * rows + i] = data[i * cols + j];
@@ -178,7 +175,7 @@ public:
     return res;
   }
 
-  void print()
+  void print() const
   {
     std::cout << "Rows: " << rows << "\n";
     std::cout << "Cols: " << cols << "\n";
@@ -200,12 +197,13 @@ public:
         return i;
       }
     }
+    return -1;
   }
 
-  T reduce_sum()
+  T reduce_sum() const
   {
     T total {};
-#pragma omp parallel for
+#pragma omp parallel for reduction(+ : total)
     for (size_t i = 0; i < rows * cols; i++) {
       total += data[i];
     }
@@ -216,12 +214,11 @@ public:
   {
     assert(axis == 0 || axis == 1);
 
-    // NOTE: Thanks claude for this, I should fix this in the future
     if (axis == 0) {
       matrix<T> res(1, cols);
-#pragma omp parallel for
       for (size_t j = 0; j < cols; j++) {
         T total {};
+#pragma omp parallel for reduction(+ : total)
         for (size_t i = 0; i < rows; i++) {
           total += data[i * cols + j];
         }
@@ -232,9 +229,9 @@ public:
 
     if (axis == 1) {
       matrix<T> res(rows, 1);
-#pragma omp parallel for
       for (size_t i = 0; i < rows; i++) {
         T total {};
+#pragma omp parallel for reduction(+ : total)
         for (size_t j = 0; j < cols; j++) {
           total += data[i * cols + j];
         }
@@ -255,28 +252,36 @@ public:
 
   static matrix<T> nrand(size_t rows, size_t cols, T mu, T std)
   {
-    std::random_device rand_dev;
-    std::mt19937 generator(rand_dev());
-    std::normal_distribution<T> distr(mu, std);
-
     matrix<T> res(rows, cols);
-#pragma omp parallel for
-    for (size_t i = 0; i < rows * cols; i++) {
-      res.data[i] = distr(generator);
+#pragma omp parallel
+    {
+      // Each thread gets its own generator
+      std::random_device rand_dev;
+      std::mt19937 generator(rand_dev() + omp_get_thread_num());
+      std::normal_distribution<T> distr(mu, std);
+
+#pragma omp for
+      for (size_t i = 0; i < rows * cols; i++) {
+        res.data[i] = distr(generator);
+      }
     }
     return res;
   }
 
   static matrix<T> urand(size_t rows, size_t cols, T range_from, T range_to)
   {
-    std::random_device rand_dev;
-    std::mt19937 generator(rand_dev());
-    std::uniform_real_distribution<T> distr(range_from, range_to);
-
     matrix<T> res(rows, cols);
-#pragma omp parallel for
-    for (size_t i = 0; i < rows * cols; i++) {
-      res.data[i] = distr(generator);
+#pragma omp parallel
+    {
+      // Each thread gets its own generator
+      std::random_device rand_dev;
+      std::mt19937 generator(rand_dev() + omp_get_thread_num());
+      std::uniform_real_distribution<T> distr(range_from, range_to);
+
+#pragma omp for
+      for (size_t i = 0; i < rows * cols; i++) {
+        res.data[i] = distr(generator);
+      }
     }
     return res;
   }
@@ -284,15 +289,18 @@ public:
   // Create this function for dropout
   static matrix<T> brand(size_t rows, size_t cols, float p)
   {
-    std::random_device rand_dev;
-    std::mt19937 generator(rand_dev());
-    // perform only 1 trial (will have two states 0 and 1)
-    std::binomial_distribution<int> distr(1, p);
-
     matrix<T> res(rows, cols);
-#pragma omp parallel for
-    for (size_t i = 0; i < rows * cols; i++) {
-      res.data[i] = static_cast<T>(distr(generator));
+#pragma omp parallel
+    {
+      // Each thread gets its own generator
+      std::random_device rand_dev;
+      std::mt19937 generator(rand_dev() + omp_get_thread_num());
+      std::binomial_distribution<int> distr(1, p);
+
+#pragma omp for
+      for (size_t i = 0; i < rows * cols; i++) {
+        res.data[i] = distr(generator);
+      }
     }
     return res;
   }
@@ -300,7 +308,6 @@ public:
   static matrix<T> onehot(T value, std::vector<T> classes)
   {
     matrix<T> res(classes.size(), 1);
-#pragma omp parallel for
     for (size_t i = 0; i < classes.size(); i++) {
       res.data[i] = classes[i] == value ? 1 : 0;
     }
@@ -320,7 +327,6 @@ public:
   {
     mat1.check_dim(mat2);
     matrix<T> res(mat1);
-#pragma omp parallel for
     for (size_t i = 0; i < res.rows * res.cols; i++) {
       res.data[i] = mask.data[i] ? mat1.data[i] : mat2.data[i];
     }
@@ -333,6 +339,24 @@ public:
     // https://stackoverflow.com/questions/73550037/finding-max-value-in-a-array
     T max_val = *std::max_element(mat.data.begin(), mat.data.end());
     return max_val;
+  }
+
+  static T min(const matrix<T>& mat)
+  {
+    T min_val = *std::min_element(mat.data.begin(), mat.data.end());
+    return min_val;
+  }
+
+  static T norm(const matrix<T>& mat)
+  {
+    // we want a vector
+    assert(mat.cols == 1);
+    T norm {};
+#pragma omp parallel for reduction(+ : norm)
+    for (size_t i = 0; i < mat.rows * mat.cols; i++) {
+      norm += (mat.data[i] * mat.data[i]);
+    }
+    return norm;
   }
 
 private:
@@ -354,7 +378,6 @@ template<typename T>
 inline matrix<T> operator+(const matrix<T>& mat, const T& value)
 {
   matrix<T> res(mat);
-#pragma omp parallel for
   for (size_t i = 0; i < mat.rows * mat.cols; i++) {
     res.data[i] = mat.data[i] + value;
   }
@@ -385,14 +408,9 @@ template<typename T>
 inline matrix<T> operator%(const matrix<T>& mat, const T& value)
 {
   matrix<T> res(mat);
-#ifdef __APPLE__
-  cblas_sscal(res.rows * res.cols, value, res.data.data(), 1);
-#else
-#  pragma omp parallel for
   for (size_t i = 0; i < res.rows * res.cols; i++) {
     res.data[i] *= value;
   }
-#endif
   return res;
 }
 
@@ -400,6 +418,16 @@ template<typename T>
 inline matrix<T> operator%(const T& value, const matrix<T>& mat)
 {
   return mat % value;
+}
+
+template<typename T>
+inline matrix<T> operator/(const matrix<T>& mat, const T& value)
+{
+  matrix<T> res(mat);
+  for (size_t i = 0; i < res.rows * res.cols; i++) {
+    res.data[i] /= value;
+  }
+  return res;
 }
 
 /*
@@ -444,17 +472,13 @@ inline matrix<T> operator*(const matrix<T>& left, const matrix<T>& right)
   /* Fall back to naive solution
   https://stackoverflow.com/questions/60360361/matrix-multiplication-using-openmp-c-collapsing-all-the-loops
   */
-#  pragma omp parallel num_threads(omp_get_thread_num())
-  {
-#  pragma omp for
-    for (size_t i = 0; i < rows; i++) {
-      for (size_t j = 0; j < cols; j++) {
-        T prod {};
-        for (size_t k = 0; k < inners; k++) {
-          prod += left.data[i * inners + k] * right.data[k * cols + j];
-        }
-        res.data[i * cols + j] = prod;
+  for (size_t i = 0; i < rows; i++) {
+    for (size_t j = 0; j < cols; j++) {
+      T prod {};
+      for (size_t k = 0; k < inners; k++) {
+        prod += left.data[i * inners + k] * right.data[k * cols + j];
       }
+      res.data[i * cols + j] = prod;
     }
   }
 #endif

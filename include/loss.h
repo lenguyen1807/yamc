@@ -1,11 +1,11 @@
 #ifndef LOSS_H
 #define LOSS_H
 
-#include "activation.h"
+#include "layers/activation.h"
 #include "matrix.h"
 
 #define IMPLEMENT_LOSS() \
-  void backward() override; \
+  matrix<float> get_loss_grad() const override; \
   float operator()(const nn::matrix<float>& logits, \
                    const nn::matrix<float>& label) override;
 
@@ -22,7 +22,7 @@ public:
   {
   }
 
-  virtual void backward() = 0;
+  virtual matrix<float> get_loss_grad() const = 0;
   virtual float operator()(const matrix<float>& logits,
                            const matrix<float>& label) = 0;
 

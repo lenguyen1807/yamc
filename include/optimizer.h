@@ -34,6 +34,11 @@ public:
 private:
   float m_lr;
 };
+
+class AdamW : public Optimizer
+{
+  // TODO: Implement AdamW later
+};
 };  // namespace nn
 
 #endif  // OPTIMIZER_H

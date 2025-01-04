@@ -1,6 +1,6 @@
-#include "activation.h"
+#include "layers/activation.h"
 #include "loss.h"
-#include "module.h"
+#include "models/module.h"
 
 using namespace nn;
 
@@ -19,19 +19,19 @@ float CrossEntropyLoss::operator()(const matrix<float>& logits,
 
   // Already implement softmax in cross entropy loss
   m_pred = m_activation.forward(logits);
+
   // cache label for backward
   m_label = label;
 
   // calculate cross entropy loss
-  float entropy = 0.0;
-#pragma omp parallel for
+  float entropy = 0.f;
   for (size_t i = 0; i < label.rows; i++) {
-    entropy += label.data[i] * std::log(m_pred.data[i]);
+    entropy += (label.data[i] * std::logf(m_pred.data[i]));
   }
   return (-entropy);
 }
 
-void CrossEntropyLoss::backward()
+matrix<float> CrossEntropyLoss::get_loss_grad() const
 {
-  m_model->backward(m_pred - m_label);
+  return m_pred - m_label;
 }

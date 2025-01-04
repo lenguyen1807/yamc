@@ -1,4 +1,4 @@
-#include "activation.h"
+#include "layers/activation.h"
 
 namespace nn
 {
@@ -11,15 +11,12 @@ matrix<float> ReLU::forward(const matrix<float>& input)
 
 matrix<float> ReLU::backward(const matrix<float>& grad)
 {
-  return static_cast<matrix<float>>(m_input > 0.0f) % grad;
+  return matrix<float>::where(
+      m_input > 0.0f, grad, matrix<float>::values_like(0.0f, m_input));
 }
 
 matrix<float> Softmax::forward(const matrix<float>& input)
 {
-  // We must assume softmax input is a vector
-  // If we use batch, the input is a matrix (but I won't implement batch :>)
-  assert(input.rows == 1);
-
   float max_input = matrix<float>::max(input);
   matrix<float> e_x =
       (input - max_input).apply([](float x) { return std::expf(x); });

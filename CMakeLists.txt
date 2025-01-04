@@ -9,11 +9,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 if(APPLE)
     set(LLVM_PATH "/opt/homebrew/opt/llvm")
     
-    # NOTE: This will cause infinite loop in libcurl :>
-    # # Set compiler to use LLVM Clang
-    # set(CMAKE_C_COMPILER "${LLVM_PATH}/bin/clang")
-    # set(CMAKE_CXX_COMPILER "${LLVM_PATH}/bin/clang++")
-    
     # Explicitly set OpenMP flags
     set(OpenMP_C_FLAGS "-Xpreprocessor -fopenmp")
     set(OpenMP_CXX_FLAGS "-Xpreprocessor -fopenmp")
@@ -30,6 +25,7 @@ if(APPLE)
     set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
 endif()
 
+add_compile_definitions(DATA_SOURCE_DIR="${CMAKE_SOURCE_DIR}/data/")
 set(SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
 set(INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
@@ -37,18 +33,17 @@ file(GLOB_RECURSE SOURCES
     "${SOURCE_DIR}/*.cpp"
 )
 
-file(GLOB_RECURSE HEADERS 
-    "${INCLUDE_DIR}/*.h"
+add_library(
+    mnist-cpp_lib OBJECT
+    ${SOURCES}
 )
 
-# Create executable with all source files
-add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
-
 # Add include directories
-target_include_directories(${PROJECT_NAME}
-    PRIVATE
-        ${INCLUDE_DIR}
-        ${OpenMP_CXX_INCLUDE_DIRS}
+target_include_directories(mnist-cpp_lib ${warning_guard}
+    PUBLIC
+    ${INCLUDE_DIR}
+    ${OpenMP_CXX_INCLUDE_DIRS}
+    "\$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/source>"
 )
 
 # Find OpenMP package
@@ -63,8 +58,16 @@ if (NOT OpenCV_FOUND)
     message(FATAL_ERROR "OpenMP not found")
 endif()
 
+# Include Catch2 for testing
+include(FetchContent)
+FetchContent_Declare(
+  Catch2
+  GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+  GIT_TAG        v3.4.0 # or a later release
+)
+FetchContent_MakeAvailable(Catch2)
+
 # Include libcurl to fetch data
-# include(FetchContent)
 # FetchContent_Declare(curl
 # 	URL https://curl.se/download/curl-8.10.0.tar.gz
 # 	DOWNLOAD_EXTRACT_TIMESTAMP true
@@ -95,8 +98,9 @@ if(APPLE)
         message(FATAL_ERROR "QuartzCore not found")
     endif()
 
-    SET(CMAKE_CXX_FLAGS "-O2 -DNDEBUG -std=c++17 -ftree-vectorize -L/opt/homebrew/opt/libomp/lib -I/opt/homebrew/opt/libomp/include -DACCELERATE_LAPACK_ILP64 -DACCELERATE_NEW_LAPACK")
-    target_link_libraries(${PROJECT_NAME} PRIVATE 
+    target_link_libraries( 
+        mnist-cpp_lib
+        PUBLIC
         OpenMP::OpenMP_CXX 
         ${OpenCV_LIBS}
         ${ACCELERATE_LIBRARY} 
@@ -104,8 +108,19 @@ if(APPLE)
         ${METAL_LIBRARY} 
         ${QUARTZCORE_LIBRARY})
 else()
-    SET(CMAKE_CXX_FLAGS "-O2 -DNDEBUG -std=c++17 -ftree-vectorize")
     target_link_libraries(${PROJECT_NAME} PRIVATE OpenMP::OpenMP_CXX ${OpenCV_LIBS})
 endif()
 
+# Create executable with all source files
+add_executable(${PROJECT_NAME} main.cpp)
+target_link_libraries(${PROJECT_NAME} PRIVATE mnist-cpp_lib)
+
+if(APPLE)
+    SET(CMAKE_CXX_FLAGS "-O2 -DNDEBUG -ftree-vectorize -L/opt/homebrew/opt/libomp/lib -I/opt/homebrew/opt/libomp/include -DACCELERATE_LAPACK_ILP64 -DACCELERATE_NEW_LAPACK")
+else()
+    SET(CMAKE_CXX_FLAGS "-O2 -DNDEBUG -ftree-vectorize")
+endif()
+
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+add_subdirectory(tests)
