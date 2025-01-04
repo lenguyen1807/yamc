@@ -21,7 +21,7 @@ First rewrite version (adding BLAS).
 
 ---
 
-<img src="results/apple_M2.png">
+<img src="results/apple_m2.png">
 Second rewrite version (improve code structures and run on Mac M2).
 
 But the CPU got too hot (about 100C and I use power adapter, not on battery)
