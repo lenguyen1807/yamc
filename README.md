@@ -9,6 +9,20 @@ brew install opencv
 
 **TL'DR**: This is the (another) rewrite branch of my old source (few months ago), the old version took about 37 minutes to finish training and testing when the new version only took 9 minutes (insane improvement), but all of these are on my old machine. On my new machine (Macbook Air M2), the performance now is 2 minutes 💀. I also changed the code structure and add **dropout**, **CNN** layer.
 
+### What this code has
+
+- **Layer**: Convolution, Linear, Dropout, Maxpooling.
+- **Model**: MLP, AlexNet, VGG-16.
+- **Activation**: ReLU, LeakyReLU, Softmax.
+- **Loss function**: Cross Entropy Loss.
+- **Optimizer**: AdamW, SGD (Stochastic Gradient Descent).
+- Flexible code structures.
+- TODO: Rewrite the whole source and implement batch
+
+### How to run
+
+### Results
+
 ---
 
 <img src="results/ryzen5_5500u_windows.png">
@@ -24,9 +38,8 @@ First rewrite version (adding BLAS).
 <img src="results/apple_m2.png">
 Second rewrite version (improve code structures and run on Mac M2).
 
-But the CPU got too hot (about 100C and I use power adapter, not on battery)
 <img src="results/m2_temp.png">
-
+But the CPU got too hot (about 100C and I use power adapter, not on battery)
 
 ---
 

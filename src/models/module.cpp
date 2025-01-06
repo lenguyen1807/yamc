@@ -11,10 +11,14 @@ void Module::zero_grad()
 
 void Module::train()
 {
-  is_train = true;
+  for (auto it = layers.begin(); it != layers.end(); ++it) {
+    it->second->train = true;
+  }
 }
 
 void Module::eval()
 {
-  is_train = false;
+  for (auto it = layers.begin(); it != layers.end(); ++it) {
+    it->second->train = false;
+  }
 }

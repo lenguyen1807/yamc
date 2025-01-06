@@ -10,9 +10,6 @@ public:
   // same for __init__ in pytorch
   MLP(size_t input_size, size_t output_size);
 
-  // For debuggin
-  void print_stats();
-
   // Now declare forward and backward function
   nn::matrix<float> forward(const nn::matrix<float>& input);
   void backward(const nn::matrix<float>& grad);

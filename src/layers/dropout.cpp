@@ -10,14 +10,10 @@ Dropout::Dropout(float p)
 matrix<float> Dropout::forward(const matrix<float>& input)
 {
   /* We use a mask, but I'm too lazy so set it as a m_input */
-  m_input = matrix<float>::brand(input.rows, input.cols, m_p);
-  return input % m_input;
-}
-
-matrix<float> Dropout::forward(const matrix<float>& input, bool train)
-{
   if (train) {
-    return forward(input);
+    // Only calculate when in training
+    m_input = matrix<float>::brand(input.rows, input.cols, m_p);
+    return input % m_input;
   }
   return input;
 }

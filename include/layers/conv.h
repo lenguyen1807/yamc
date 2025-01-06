@@ -14,49 +14,56 @@ namespace nn
 {
 class Optimizer;
 
-class Convolution : Layer<float>
+class Convolution : public Layer<float>
 {
 public:
   struct Params
   {
-    size_t kernel_size;
-    size_t padding;
-    size_t stride;
+    size_t ker_h;
+    size_t ker_w;
+    size_t pad_w;
+    size_t pad_h;
+    size_t stride_h;
+    size_t stride_w;
   };
 
-  /* NOTE: This Convolution layer supports square image (H = W) only */
-  Convolution(size_t input_channels, size_t output_channels, Params params);
+  Convolution(size_t input_channels,
+              size_t output_channels,
+              size_t stride,
+              size_t padding,
+              size_t kernel_size,
+              bool rand_init = true,
+              bool bias = true);
 
   /*
   - Because we are using matrix, we need to convert convolution operation to
   some matrix operations
   - So we use two method called im2col and col2im
-  */
-
-  /*
   - You can see an example of im2col here:
   https://ieeexplore.ieee.org/document/9114626/
   - And some implementation of im2col and col2im
   https://github.com/pjreddie/darknet/blob/master/src/im2col.c
   https://github.com/pjreddie/darknet/blob/master/src/col2im.c
   */
-  float im2col_get_pixel(const cv::Mat& image,
-                         size_t height,
-                         size_t width,
-                         size_t channels,
-                         size_t row,
-                         size_t col,
-                         size_t channel,
-                         size_t pad);
-
-  matrix<float> im2col(const cv::Mat& image,
+  matrix<float> im2col(const cv::Mat& data_im,
                        size_t channels,
                        size_t height,
                        size_t width,
-                       Params params);
+                       size_t ksize,
+                       size_t stride,
+                       size_t pad);
+  size_t im2col_pixel_index(size_t height,
+                            size_t width,
+                            size_t channels,
+                            size_t row,
+                            size_t col,
+                            size_t channel,
+                            size_t pad);
 
-  // calculate output size (h, w)
-  static size_t calculate_output_size(size_t input_size, Params params);
+  /* Some helper function */
+  std::pair<size_t, size_t> calculate_output_size(size_t input_h,
+                                                  size_t input_w,
+                                                  Params params);
 
   /*
   - Because my matrix isn't a 3d array
@@ -65,11 +72,8 @@ public:
   matrix<float> forward(const cv::Mat& input);
   void accept_optimizer(Optimizer* optim) override;
 
-private:
-  matrix<float> m_W;
-  matrix<float> m_b;
-  matrix<float> m_inputCol;
-  cv::Mat m_inputCache;
+public:
+  Params params;
 };
 };  // namespace nn
 

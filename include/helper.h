@@ -6,7 +6,6 @@
 /* Initialize */
 static nn::matrix<float> xavier_initialize(size_t rows, size_t cols)
 {
-  // Glorot/Xavier initialization
   float scale = std::sqrt(2.0f / (rows + cols));
 
   // Prevent scale from becoming too small or too large
@@ -42,6 +41,7 @@ static nn::matrix<float> normalize_minmax(const nn::matrix<float>& image)
   return (image - min_val) / range;
 }
 
+/* For debugging, thanks Claude for helping me */
 static void print_stats(const nn::matrix<float>& m, const std::string& name)
 {
   float min_val = nn::matrix<float>::min(m);

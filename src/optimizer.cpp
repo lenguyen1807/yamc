@@ -12,26 +12,65 @@ void Optimizer::step()
   }
 }
 
-SGD::SGD(Module* model, float learning_rate)
-    : Optimizer(model)
-    , m_lr(learning_rate)
+SGD::SGD(Module* model, float learning_rate, float weight_decay)
+    : Optimizer(model, learning_rate, weight_decay)
 {
+}
+
+void SGD::visit_layer(Layer<float>* layer)
+{
+  auto W = layer->get_weight();
+  auto dW = layer->get_weightgrad();
+  layer->set_weight(W % (1.0f - m_lr * m_wd) - (dW % m_lr));
+
+  if (layer->bias) {
+    auto b = layer->get_bias();
+    auto db = layer->get_biasgrad();
+    layer->set_bias(b % (1.0f - m_lr * m_wd) - (db % m_lr));
+  }
 }
 
 void SGD::visit_linear(Linear* linear)
 {
-  auto W = linear->get_weight();
-  auto dW = linear->get_weightgrad();
-  linear->set_weight(W - (dW % m_lr));
-
-  if (linear->is_bias) {
-    auto b = linear->get_bias();
-    auto db = linear->get_biasgrad();
-    linear->set_bias(b - (db % m_lr));
-  }
+  visit_layer(linear);
 }
 
 void SGD::visit_conv(Convolution* conv)
 {
-  // TODO: For later
+  // It should be the same as linear
+  visit_layer(conv);
+}
+
+AdamW::AdamW(Module* model,
+             float learning_rate,
+             float weight_decay,
+             float m_beta1,
+             float m_beta2,
+             float eps)
+    : Optimizer(model, learning_rate, weight_decay)
+{
+}
+
+void AdamW::visit_layer(Layer<float>* layer)
+{
+  auto W = layer->get_weight();
+  auto dW = layer->get_weightgrad();
+
+  // TODO: Implement later
+
+  // update the same for bias
+  if (layer->bias) {
+    auto b = layer->get_bias();
+    auto db = layer->get_biasgrad();
+  }
+}
+
+void AdamW::visit_conv(Convolution* conv)
+{
+  visit_layer(conv);
+}
+
+void AdamW::visit_linear(Linear* linear)
+{
+  visit_layer(linear);
 }

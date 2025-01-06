@@ -2,6 +2,7 @@
 
 namespace nn
 {
+/* ReLU */
 matrix<float> ReLU::forward(const matrix<float>& input)
 {
   m_input = input;
@@ -15,6 +16,7 @@ matrix<float> ReLU::backward(const matrix<float>& grad)
       m_input > 0.0f, grad, matrix<float>::values_like(0.0f, m_input));
 }
 
+/* Softmax */
 matrix<float> Softmax::forward(const matrix<float>& input)
 {
   float max_input = matrix<float>::max(input);
@@ -29,5 +31,17 @@ matrix<float> Softmax::backward(const matrix<float>& grad)
 {
   // You should left softmax derivative for loss function
   return grad;
+}
+
+matrix<float> LeakyReLU::forward(const matrix<float>& input)
+{
+  m_input = input;
+  return matrix<float>::where(m_input > 0.0f, m_input, m_input % m_slope);
+}
+
+matrix<float> LeakyReLU::backward(const matrix<float>& grad)
+{
+  return matrix<float>::where(
+      m_input > 0.0f, grad, matrix<float>::values_like(m_slope, m_input));
 }
 };  // namespace nn

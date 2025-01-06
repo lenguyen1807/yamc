@@ -12,19 +12,20 @@
 template<typename T>
 static bool are_equal(T f1, T f2, T epsilon)
 {
-  return (std::fabs(f1 - f2) <= epsilon);
+  return (std::fabs(f1 - f2)
+          <= epsilon * std::fmax(std::fabs(f1), std::fabs(f2)));
 }
 
 inline bool is_close_mat(const nn::matrix<float>& mat1,
                          const nn::matrix<float>& mat2,
                          float epsilon)
 {
-  if (mat1.rows != mat2.rows || mat1.cols != mat2.cols) {
+  if ((mat1.rows != mat2.rows) || (mat1.cols != mat2.cols)) {
     return false;
   }
 
-  for (size_t i = 0; i < mat1.rows * mat2.rows; i++) {
-    if (!are_equal(mat1.data[i], mat2.data[i], epsilon)) {
+  for (size_t i = 0; i < mat1.rows * mat2.cols; i++) {
+    if (!are_equal<float>(mat1.data[i], mat2.data[i], epsilon)) {
       return false;
     }
   }

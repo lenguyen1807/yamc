@@ -1,4 +1,5 @@
 #include "layers/activation.h"
+#include "layers/dropout.h"
 #include "layers/linear.h"
 #include "models/mlp.h"
 
@@ -11,7 +12,8 @@ MLP::MLP(size_t input_size, size_t output_size)
   add<3, nn::ReLU>();
   add<4, nn::Linear>(300, 100);
   add<5, nn::ReLU>();
-  add<6, nn::Linear>(100, output_size);
+  add<6, nn::Dropout>();  // avoid overfitting
+  add<7, nn::Linear>(100, output_size);
 }
 
 nn::matrix<float> MLP::forward(const nn::matrix<float>& input)
@@ -31,5 +33,3 @@ void MLP::backward(const nn::matrix<float>& grad)
     result = iter->second->backward(result);
   }
 }
-
-void MLP::print_stats() {}

@@ -39,7 +39,6 @@ public:
 
 protected:
   std::map<size_t, std::unique_ptr<Layer<float>>> layers = {};
-  bool is_train = false;
 };
 }  // namespace nn
 
