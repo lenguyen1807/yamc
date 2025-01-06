@@ -156,12 +156,7 @@ public:
   }
 
   /* Some ultility functions */
-  void fill(const T& value)
-  {
-    for (size_t i = 0; i < rows * cols; i++) {
-      data[i] = value;
-    }
-  }
+  void fill(const T& value) { std::fill(data.begin(), data.end(), value); }
 
   // Transpose function
   matrix<T> t() const

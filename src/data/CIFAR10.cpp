@@ -3,6 +3,8 @@
 #include <memory>
 #include <sstream>
 
+#include <opencv2/core.hpp>
+#include <opencv2/core/base.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgcodecs.hpp>
 
@@ -83,8 +85,11 @@ void CIFAR10Data::load_im(const std::string& path,
       return;
     }
 
-    img.data = data;
+    // normalize image to [0, 1] range
+    cv::normalize(data, img.data, 0, 1, cv::NORM_MINMAX);
+
     img.label = label;
+    // add image to vector
     imgs.emplace_back(std::make_unique<image>(img));
   }
 }
