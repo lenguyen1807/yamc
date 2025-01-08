@@ -30,8 +30,8 @@ public:
   Layer() = default;
 
   /* Virtual method */
-  virtual matrix<T> forward(const matrix<T>& input) = 0;
-  virtual matrix<T> backward(const matrix<T>& grad) = 0;
+  virtual matrix<T> forward(const matrix<T>& input) { return input; };
+  virtual matrix<T> backward(const matrix<T>& grad) { return grad; };
   virtual void print_stats() {}
   virtual void zero_grad() {}
   virtual void accept_optimizer(Optimizer* optim) {}

@@ -1,5 +1,5 @@
 set(TEST_INCLUDE test_helper.h)
-set(TEST_SOURCES test_matrix.cpp test_activation.cpp)
+set(TEST_SOURCES test_matrix.cpp test_activation.cpp test_convolution.cpp)
 
 add_executable(${PROJECT_NAME}_tests ${TEST_INCLUDE} ${TEST_SOURCES})
 

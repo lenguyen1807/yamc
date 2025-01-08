@@ -86,7 +86,8 @@ void CIFAR10Data::load_im(const std::string& path,
     }
 
     // normalize image to [0, 1] range
-    cv::normalize(data, img.data, 0, 1, cv::NORM_MINMAX);
+    cv::normalize(
+        data, img.data, 0, 1, cv::NORM_MINMAX, CV_32FC(data.channels()));
 
     img.label = label;
     // add image to vector
