@@ -1,3 +1,7 @@
+#include <cstddef>
+
+#include <opencv2/core/mat.hpp>
+
 #include "helper.h"
 #include "layers/conv.h"
 #include "optimizer.h"
@@ -14,8 +18,7 @@ Convolution::Convolution(size_t input_channels,
     : Layer<float>(output_channels,
                    input_channels * kernel_size * kernel_size,
                    output_channels,
-                   1,
-                   bias)
+                   1)
     , m_params({kernel_size, kernel_size, padding, padding, stride, stride})
 {
   if (rand_init) {
@@ -42,9 +45,46 @@ cv::Mat Convolution::forward(const cv::Mat& input)
                                     m_params.pad_w);
 
   // Calculate convolution operation as matrix multiplication
-  matrix<float> output = m_W * input_cols + m_b;
+  matrix<float> output = m_W * input_cols;
 
-  // TODO: Implement later
+  // If we want to add bias, we must broadcast it
+  matrix<float> broadcast_bias = m_b.broadcast_col(output.cols);
+  output += broadcast_bias;
+
+  // Calculate output size
+  size_t output_c = output.rows;
+  size_t output_h, output_w;
+  std::tie(output_h, output_w) =
+      Convolution::calculate_output_size(input.rows, input.cols, m_params);
+
+  /*
+  Because OpenCV do not support arbitrary channels so we need to use this
+  trick: Create a vector then merge the vector together to create a single image
+  */
+  std::vector<cv::Mat> output_full;
+
+  for (size_t c = 0; c < output_c; c++) {
+    cv::Mat output_single(output_h, output_w, CV_32FC1);
+
+    // Find index of each row in 1D vector
+    /* NOTE: From the first approach, I use a temporary vector to store
+    std::vector<float> vec = {output.data.begin() ..., ...};
+    But this is absolutely because res will be destroyed and output_single
+    will lost data */
+    float* dst = output_single.ptr<float>(0);
+    std::copy(output.data.begin() + c * output.cols,
+              output.data.begin() + (c + 1) * output.cols,
+              dst);
+
+    // Add image to vector
+    // NOTE: We need to copy opencv image with clone (dont emplace it directly)
+    output_full.emplace_back(output_single.clone());
+  }
+
+  cv::Mat output_result(output_h, output_w, CV_32FC(output_c));
+  cv::merge(output_full, output_result);
+
+  return output_result;
 }
 
 cv::Mat Convolution::backward(const cv::Mat& grad)

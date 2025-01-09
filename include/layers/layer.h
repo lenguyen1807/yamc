@@ -18,9 +18,9 @@ class Layer
 public:
   Layer(size_t weight_rows,
         size_t weight_cols,
-        size_t bias_rows,
-        size_t bias_cols,
-        bool bias)
+        size_t bias_rows = 0,
+        size_t bias_cols = 0,
+        bool bias = true)
       : m_W(weight_rows, weight_cols)
       , m_b(bias_rows, bias_cols)
       , bias(bias)

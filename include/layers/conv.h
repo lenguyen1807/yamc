@@ -54,6 +54,7 @@ public:
     + https://github.com/pjreddie/darknet/blob/master/src/im2col.c
     + https://github.com/pjreddie/darknet/blob/master/src/col2im.c
     + https://github.com/fmassa/torch-nn/blob/master/ConvLua/im2col.c
+    + https://hackmd.io/@machine-learning/blog-post-cnnumpy-fast
   */
   static matrix<float> im2col(const cv::Mat& data_im,
                               size_t kernel_h,

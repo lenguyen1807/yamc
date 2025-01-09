@@ -5,6 +5,7 @@
 #include <cassert>
 #include <iostream>
 #include <random>
+#include <stdexcept>
 #include <vector>
 
 #include <omp.h>
@@ -236,6 +237,33 @@ public:
     }
   }
 
+  matrix<T> broadcast_col(size_t new_cols)
+  {
+    if (cols > new_cols) {
+      throw std::invalid_argument(
+          "New columns should be larger than old columns");
+    }
+
+    matrix<float> res(*this);
+    while (res.cols < new_cols) {
+      res = hstack(res, *this);
+    }
+    return res;
+  }
+
+  matrix<T> broadcast_row(size_t new_rows)
+  {
+    if (rows > new_rows) {
+      throw std::invalid_argument("New rows should be larger than old rows");
+    }
+
+    matrix<float> res(*this);
+    while (res.rows < new_rows) {
+      res = vstack(res, *this);
+    }
+    return res;
+  }
+
   /* Static function */
   static matrix<T> flatten(const matrix<T>& mat)
   {
@@ -345,7 +373,10 @@ public:
   static T norm(const matrix<T>& mat)
   {
     // we want a vector
-    assert(mat.cols == 1);
+    if (mat.cols != 1) {
+      throw std::invalid_argument("Only a vector can have norm value");
+    }
+
     T norm {};
 #pragma omp parallel for reduction(+ : norm)
     for (size_t i = 0; i < mat.rows * mat.cols; i++) {
@@ -354,11 +385,72 @@ public:
     return norm;
   }
 
+  static matrix<T> vstack(const matrix<T>& mat1, const matrix<T>& mat2)
+  {
+    if (mat1.cols != mat2.cols) {
+      throw std::invalid_argument("Must be equal in columns");
+    }
+
+    size_t new_rows = mat1.rows + mat2.rows;
+    matrix<T> res(new_rows, mat1.cols);
+
+    size_t i, j;
+
+    // We will stack two time
+#pragma omp parallel private(i, j)
+    for (i = 0; i < mat1.rows; i++) {
+      for (j = 0; j < mat1.cols; j++) {
+        res.data[i * mat1.cols + j] = mat1.data[i * mat1.cols + j];
+      }
+    }
+
+#pragma omp parallel private(i, j)
+    for (i = 0; i < mat2.rows; i++) {
+      for (j = 0; j < mat2.cols; j++) {
+        res.data[(i + mat1.rows) * mat2.cols + j] =
+            mat2.data[i * mat2.cols + j];
+      }
+    }
+
+    return res;
+  }
+
+  static matrix<T> hstack(const matrix<T>& mat1, const matrix<T>& mat2)
+  {
+    if (mat1.rows != mat2.rows) {
+      throw std::invalid_argument("Must be equal in rows");
+    }
+
+    size_t new_cols = mat1.cols + mat2.cols;
+    matrix<T> res(mat1.rows, new_cols);
+
+    size_t i, j;
+
+    // We will stack two time
+#pragma omp parallel private(i, j)
+    for (i = 0; i < mat1.rows; i++) {
+      for (j = 0; j < mat1.cols; j++) {
+        res.data[i * (new_cols) + j] = mat1.data[i * mat1.cols + j];
+      }
+    }
+
+#pragma omp parallel private(i, j)
+    for (i = 0; i < mat2.rows; i++) {
+      for (j = 0; j < mat2.cols; j++) {
+        res.data[i * (new_cols) + (j + mat1.cols)] =
+            mat2.data[i * mat2.cols + j];
+      }
+    }
+
+    return res;
+  }
+
 private:
   void check_dim(const matrix<T>& mat) const
   {
-    assert(mat.cols == cols);
-    assert(mat.rows == rows);
+    if (mat.cols != cols || mat.rows != rows) {
+      throw std::invalid_argument("Two matrix should be equal in size");
+    }
   }
 };
 
@@ -433,7 +525,9 @@ inline matrix<T> operator/(const matrix<T>& mat, const T& value)
 template<typename T>
 inline matrix<T> operator*(const matrix<T>& left, const matrix<T>& right)
 {
-  assert(left.cols == right.rows);
+  if (left.cols != right.rows) {
+    throw std::invalid_argument("Left columns should equal right rows");
+  }
 
   size_t rows = left.rows;
   size_t cols = right.cols;
