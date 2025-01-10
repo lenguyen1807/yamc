@@ -7,6 +7,7 @@
 #include <opencv2/core.hpp>
 #include <opencv2/core/mat.hpp>
 
+#include "helper.h"
 #include "layer.h"
 #include "matrix.h"
 
@@ -14,26 +15,16 @@ namespace nn
 {
 class Optimizer;
 
-class Convolution : public Layer<float>
+class Conv2D : public Layer<float>
 {
 public:
-  struct Params
-  {
-    size_t ker_h;
-    size_t ker_w;
-    size_t pad_h;
-    size_t pad_w;
-    size_t stride_h;
-    size_t stride_w;
-  };
-
-  Convolution(size_t input_channels,
-              size_t output_channels,
-              size_t stride,
-              size_t padding,
-              size_t kernel_size,
-              bool rand_init = true,
-              bool bias = true);
+  Conv2D(size_t input_channels,
+         size_t output_channels,
+         size_t stride,
+         size_t kernel_size,
+         size_t padding = 0,
+         bool rand_init = true,
+         bool bias = true);
 
   /*
   - Because my matrix isn't a 3d array
@@ -71,12 +62,16 @@ public:
                                 size_t channel);
   static std::pair<size_t, size_t> calculate_output_size(size_t input_h,
                                                          size_t input_w,
-                                                         Params params);
+                                                         ConvParams params);
+  static cv::Mat reshape_mat2im(const matrix<float>& im,
+                                size_t channels,
+                                size_t height,
+                                size_t width);
 
 public:
   // reimplement input from layer
   cv::Mat m_input;
-  Params m_params;
+  ConvParams m_params;
 };
 };  // namespace nn
 

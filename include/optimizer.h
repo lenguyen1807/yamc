@@ -5,12 +5,12 @@
 
 #define IMPLEMENT_OPTIMIZER() \
   void visit_linear(Linear* layer) override; \
-  void visit_conv(Convolution* conv) override;
+  void visit_conv(Conv2D* conv) override;
 
 namespace nn
 {
 class Linear;
-class Convolution;
+class Conv2D;
 class Module;
 
 class Optimizer
@@ -23,7 +23,7 @@ public:
 
   void step();
   virtual void visit_linear(Linear* layer) = 0;
-  virtual void visit_conv(Convolution* conv) = 0;
+  virtual void visit_conv(Conv2D* conv) = 0;
 
 protected:
   Module* m_model;

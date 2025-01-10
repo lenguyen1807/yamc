@@ -3,6 +3,19 @@
 
 #include "matrix.h"
 
+namespace nn
+{
+struct ConvParams
+{
+  size_t ker_h;
+  size_t ker_w;
+  size_t pad_h;
+  size_t pad_w;
+  size_t stride_h;
+  size_t stride_w;
+};
+};  // namespace nn
+
 /* Initialize */
 static nn::matrix<float> xavier_initialize(size_t rows, size_t cols)
 {

@@ -35,7 +35,7 @@ void SGD::visit_linear(Linear* linear)
   visit_layer(linear);
 }
 
-void SGD::visit_conv(Convolution* conv)
+void SGD::visit_conv(Conv2D* conv)
 {
   // It should be the same as linear
   visit_layer(conv);
@@ -65,7 +65,7 @@ void AdamW::visit_layer(Layer<float>* layer)
   }
 }
 
-void AdamW::visit_conv(Convolution* conv)
+void AdamW::visit_conv(Conv2D* conv)
 {
   visit_layer(conv);
 }

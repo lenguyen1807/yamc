@@ -210,6 +210,7 @@ public:
   {
     assert(axis == 0 || axis == 1);
 
+    // sum by row
     if (axis == 0) {
       matrix<T> res(1, cols);
       for (size_t j = 0; j < cols; j++) {
@@ -218,11 +219,12 @@ public:
         for (size_t i = 0; i < rows; i++) {
           total += data[i * cols + j];
         }
-        res[j] = total;
+        res.data[j] = total;
       }
       return res;
     }
 
+    // sum by column
     if (axis == 1) {
       matrix<T> res(rows, 1);
       for (size_t i = 0; i < rows; i++) {
@@ -231,7 +233,7 @@ public:
         for (size_t j = 0; j < cols; j++) {
           total += data[i * cols + j];
         }
-        res[i] = total;
+        res.data[i] = total;
       }
       return res;
     }
@@ -262,6 +264,17 @@ public:
       res = vstack(res, *this);
     }
     return res;
+  }
+
+  matrix<T> mean(size_t axis = 0)
+  {
+    if (axis == 0) {
+      return this->sum(0) / static_cast<T>(rows);
+    } else if (axis == 1) {
+      return this->sum(1) / static_cast<T>(cols);
+    } else {
+      throw std::invalid_argument("Only support axis = 1 or axis = 0");
+    }
   }
 
   /* Static function */

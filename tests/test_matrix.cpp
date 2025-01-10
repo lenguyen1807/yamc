@@ -102,4 +102,45 @@ TEST_CASE("Hstack", "[hstack]")
       is_close_mat(nn::matrix<float>::hstack(mat1, mat2), base, EPSILON_FLT));
 }
 
+TEST_CASE("Sum axis=0", "[sum-axis=0]")
+{
+  nn::matrix<float> mat1({
+      {1.f, 2.f},
+      {2.f, 4.f},
+  });
+  nn::matrix<float> base({{3.f, 6.f}});
+  REQUIRE(is_close_mat(mat1.sum(0), base, EPSILON_FLT));
+}
+
+TEST_CASE("Sum axis=1", "[sum-axis=1]")
+{
+  nn::matrix<float> mat1({
+      {1.f, 2.f},
+      {2.f, 4.f},
+  });
+  nn::matrix<float> base({{3.f}, {6.f}});
+  REQUIRE(is_close_mat(mat1.sum(1), base, EPSILON_FLT));
+}
+
+TEST_CASE("Mean axis=0", "[mean-axis=0]")
+{
+  nn::matrix<float> mat1({
+      {1.f, 2.f},
+      {2.f, 4.f},
+  });
+  nn::matrix<float> base({{3.f / 2.f, 6.f / 2.f}});
+  REQUIRE(is_close_mat(mat1.mean(0), base, EPSILON_FLT));
+}
+
+TEST_CASE("Mean axis=1", "[mean-axis=1]")
+{
+  nn::matrix<float> mat1({
+      {1.f, 2.f},
+      {2.f, 4.f},
+  });
+  nn::matrix<float> base({{3.f / static_cast<float>(mat1.cols)},
+                          {6.f / static_cast<float>(mat1.cols)}});
+  REQUIRE(is_close_mat(mat1.mean(1), base, EPSILON_FLT));
+}
+
 // TODO: Add more tests later
