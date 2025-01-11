@@ -23,12 +23,11 @@ cv::Mat AvgPool2D::forward(const cv::Mat& input)
    * (through im2col) (seperate by rows). The easiest implementation is
    * splitting image to each channel, then process each channel seperately so I
    * won't care about the index so much */
-  nn::matrix<float> result;
   std::vector<cv::Mat> input_splits;
   cv::split(m_input, input_splits);
+  matrix<float> result;
 
   for (const auto& img : input_splits) {
-    std::cout << img << "\n";
     auto im_col = Conv2D::im2col(img,
                                  m_params.ker_h,
                                  m_params.ker_w,

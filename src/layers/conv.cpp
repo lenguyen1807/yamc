@@ -13,12 +13,12 @@ Conv2D::Conv2D(size_t input_channels,
                size_t stride,
                size_t kernel_size,
                size_t padding,
-               bool rand_init,
-               bool bias)
+               bool rand_init)
     : Layer<float>(output_channels,
                    input_channels * kernel_size * kernel_size,
-                   output_channels,
-                   1)
+                   0,
+                   0,
+                   false)
     , m_params({kernel_size, kernel_size, padding, padding, stride, stride})
 {
   if (rand_init) {
@@ -34,22 +34,18 @@ void Conv2D::accept_optimizer(Optimizer* optim)
 
 cv::Mat Conv2D::forward(const cv::Mat& input)
 {
-  m_input = input.clone();
+  m_im = input.clone();
 
-  matrix<float> input_cols = Conv2D::im2col(input,
-                                            m_params.ker_h,
-                                            m_params.ker_w,
-                                            m_params.stride_h,
-                                            m_params.stride_w,
-                                            m_params.pad_h,
-                                            m_params.pad_w);
+  m_input = Conv2D::im2col(m_im,
+                           m_params.ker_h,
+                           m_params.ker_w,
+                           m_params.stride_h,
+                           m_params.stride_w,
+                           m_params.pad_h,
+                           m_params.pad_w);
 
   // Calculate convolution operation as matrix multiplication
-  matrix<float> output = m_W * input_cols;
-
-  // If we want to add bias, we must broadcast it
-  matrix<float> broadcast_bias = m_b.broadcast_col(output.cols);
-  output += broadcast_bias;
+  matrix<float> output = m_W * m_input;
 
   // Calculate output size
   size_t output_c = output.rows;
@@ -62,7 +58,30 @@ cv::Mat Conv2D::forward(const cv::Mat& input)
 
 cv::Mat Conv2D::backward(const cv::Mat& grad)
 {
-  // TODO: Implement later
+  /*
+   * First reshape the gradient to a matrix
+   * Each row vector is an image channel (with height * width dimension)
+   */
+  matrix<float> grad_mat = Conv2D::reshape_im2mat(grad);
+
+  // Then dX (column version not image) = m_W.T * grad_mat;
+  matrix<float> dX_col = m_W.t() * grad_mat;
+
+  // We also need to take gradient w.r.t W
+  // We already use im2col on input to get m_input in forward pass
+  m_dW = grad_mat * m_input.t();
+
+  // Return image
+  return Conv2D::col2im(dX_col,
+                        grad.channels(),
+                        grad.rows,
+                        grad.cols,
+                        m_params.ker_h,
+                        m_params.ker_w,
+                        m_params.stride_h,
+                        m_params.stride_w,
+                        m_params.pad_h,
+                        m_params.pad_w);
 }
 
 std::pair<size_t, size_t> Conv2D::calculate_output_size(size_t input_h,
@@ -111,6 +130,44 @@ matrix<float> Conv2D::im2col(const cv::Mat& data_im,
   return res;
 }
 
+cv::Mat Conv2D::col2im(const matrix<float> data_im,
+                       size_t channels,
+                       size_t height,
+                       size_t width,
+                       size_t kernel_h,
+                       size_t kernel_w,
+                       size_t stride_h,
+                       size_t stride_w,
+                       size_t pad_h,
+                       size_t pad_w)
+{
+  size_t height_col, width_col;
+  std::tie(height_col, width_col) = Conv2D::calculate_output_size(
+      data_im.rows,
+      data_im.cols,
+      {kernel_h, kernel_w, pad_h, pad_w, stride_h, stride_w});
+
+  int channels_col = channels * kernel_h * kernel_w;
+  cv::Mat output = cv::Mat::zeros(height, width, CV_32FC(channels));
+
+  for (size_t c = 0; c < channels_col; ++c) {
+    size_t w_offset = c % kernel_w;
+    size_t h_offset = (c / kernel_w) % kernel_h;
+    size_t c_im = c / kernel_h / kernel_w;
+    for (size_t h = 0; h < height_col; ++h) {
+      for (size_t w = 0; w < width_col; ++w) {
+        size_t h_im = h_offset + h * stride_h;
+        size_t w_im = w_offset + w * stride_w;
+        size_t col_index = col_index = (c * height_col + h) * width_col + w;
+        float val = data_im.data[col_index];
+        Conv2D::add_pixel_col2im(output, h_im, w_im, pad_h, pad_w, c_im, val);
+      }
+    }
+  }
+
+  return output;
+}
+
 float Conv2D::get_pixel_im2col(const cv::Mat& data_im,
                                size_t h_im,
                                size_t w_im,
@@ -134,6 +191,30 @@ float Conv2D::get_pixel_im2col(const cv::Mat& data_im,
   }
 
   return 0.f;
+}
+
+void Conv2D::add_pixel_col2im(cv::Mat& data_im,
+                              size_t h_im,
+                              size_t w_im,
+                              size_t pad_h,
+                              size_t pad_w,
+                              size_t channel,
+                              float val)
+{
+  // H padding and W padding can be negative
+  int h_pad = static_cast<int>(h_im) - static_cast<int>(pad_h);
+  int w_pad = static_cast<int>(w_im) - static_cast<int>(pad_w);
+
+  // std::cout << "Pad(" << h_pad << "," << w_pad << ")\n";
+
+  if (h_pad >= 0 && h_pad < data_im.rows && w_pad >= 0 && w_pad < data_im.cols)
+  {
+    if (data_im.channels() == 1) {
+      data_im.at<float>(h_pad, w_pad) = val;
+    } else {
+      data_im.ptr<float>(h_pad, w_pad)[channel] = val;
+    }
+  }
 }
 
 cv::Mat Conv2D::reshape_mat2im(const matrix<float>& im,
@@ -169,4 +250,24 @@ cv::Mat Conv2D::reshape_mat2im(const matrix<float>& im,
   cv::merge(output_full, output_result);
 
   return output_result;
+}
+
+matrix<float> Conv2D::reshape_im2mat(const cv::Mat& im)
+{
+  matrix<float> res(im.channels(), im.rows * im.cols);
+
+  for (size_t c = 0; c < im.channels(); c++) {
+    for (size_t h = 0; h < im.rows; h++) {
+      for (size_t w = 0; w < im.cols; w++) {
+        size_t idx = c * (im.rows * im.cols) + h * im.cols + w;
+        if (im.channels() == 1) {
+          res.data[idx] = im.at<float>(h, w);
+        } else {
+          res.data[idx] = im.ptr<float>(h, w)[c];
+        }
+      }
+    }
+  }
+
+  return res;
 }

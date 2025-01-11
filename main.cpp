@@ -23,8 +23,5 @@ int main()
   cv::Mat result = conv.forward(img2);
   std::cout << result << "\n";
 
-  // cv::Mat result1 = pool.forward(result);
-  // std::cout << result1 << "\n";
-
   return 0;
 }

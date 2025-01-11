@@ -23,8 +23,7 @@ public:
          size_t stride,
          size_t kernel_size,
          size_t padding = 0,
-         bool rand_init = true,
-         bool bias = true);
+         bool rand_init = true);
 
   /*
   - Because my matrix isn't a 3d array
@@ -45,7 +44,6 @@ public:
     + https://github.com/pjreddie/darknet/blob/master/src/im2col.c
     + https://github.com/pjreddie/darknet/blob/master/src/col2im.c
     + https://github.com/fmassa/torch-nn/blob/master/ConvLua/im2col.c
-    + https://hackmd.io/@machine-learning/blog-post-cnnumpy-fast
   */
   static matrix<float> im2col(const cv::Mat& data_im,
                               size_t kernel_h,
@@ -60,6 +58,23 @@ public:
                                 size_t pad_h,
                                 size_t pad_w,
                                 size_t channel);
+  static cv::Mat col2im(const matrix<float> data_im,
+                        size_t channels,
+                        size_t height,
+                        size_t width,
+                        size_t kernel_h,
+                        size_t kernel_w,
+                        size_t stride_h,
+                        size_t stride_w,
+                        size_t pad_h,
+                        size_t pad_w);
+  static void add_pixel_col2im(cv::Mat& data_im,
+                               size_t h_im,
+                               size_t w_im,
+                               size_t pad_h,
+                               size_t pad_w,
+                               size_t channel,
+                               float val);
   static std::pair<size_t, size_t> calculate_output_size(size_t input_h,
                                                          size_t input_w,
                                                          ConvParams params);
@@ -67,10 +82,11 @@ public:
                                 size_t channels,
                                 size_t height,
                                 size_t width);
+  static matrix<float> reshape_im2mat(const cv::Mat& im);
 
 public:
-  // reimplement input from layer
-  cv::Mat m_input;
+  // Reimplement input from layer
+  cv::Mat m_im;
   ConvParams m_params;
 };
 };  // namespace nn

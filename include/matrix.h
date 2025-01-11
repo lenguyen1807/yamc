@@ -208,8 +208,6 @@ public:
 
   matrix<T> sum(size_t axis)
   {
-    assert(axis == 0 || axis == 1);
-
     // sum by row
     if (axis == 0) {
       matrix<T> res(1, cols);
@@ -222,10 +220,7 @@ public:
         res.data[j] = total;
       }
       return res;
-    }
-
-    // sum by column
-    if (axis == 1) {
+    } else if (axis == 1) {
       matrix<T> res(rows, 1);
       for (size_t i = 0; i < rows; i++) {
         T total {};
@@ -237,6 +232,7 @@ public:
       }
       return res;
     }
+    throw std::invalid_argument("Only accept axis=0 or axis=1");
   }
 
   matrix<T> broadcast_col(size_t new_cols)
@@ -276,6 +272,8 @@ public:
       throw std::invalid_argument("Only support axis = 1 or axis = 0");
     }
   }
+
+  bool empty() const { return cols == 0 && rows == 0 && data.empty(); }
 
   /* Static function */
   static matrix<T> flatten(const matrix<T>& mat)
@@ -400,6 +398,11 @@ public:
 
   static matrix<T> vstack(const matrix<T>& mat1, const matrix<T>& mat2)
   {
+    // just a trick
+    if (mat1.empty()) {
+      return mat2;
+    }
+
     if (mat1.cols != mat2.cols) {
       throw std::invalid_argument("Must be equal in columns");
     }
@@ -430,6 +433,11 @@ public:
 
   static matrix<T> hstack(const matrix<T>& mat1, const matrix<T>& mat2)
   {
+    // just a trick
+    if (mat1.empty()) {
+      return mat2;
+    }
+
     if (mat1.rows != mat2.rows) {
       throw std::invalid_argument("Must be equal in rows");
     }

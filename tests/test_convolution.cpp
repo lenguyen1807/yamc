@@ -28,3 +28,22 @@ TEST_CASE("im2col on 1x5x5 image, stride = 2, padding = 0, kernel = 3",
 
 // TODO: Implement more test cases to ensure im2col and col2im function work
 // correctly (hope so)
+
+TEST_CASE("reshpae matrix to image", "reshape_mat2im")
+{
+  // TODO: Implement later
+}
+
+TEST_CASE("reshape image to matrix", "reshape_im2mat")
+{
+  cv::Mat img(5, 5, CV_32F);
+  for (size_t i = 0; i < 5; i++)
+    for (size_t j = 0; j < 5; j++)
+      img.at<float>(i, j) = i + j;
+  std::cout << img << "\n";
+
+  nn::matrix<float> base({{0, 1, 2, 3, 4, 1, 2, 3, 4, 5, 2, 3, 4,
+                           5, 6, 3, 4, 5, 6, 7, 4, 5, 6, 7, 8}});
+  nn::matrix<float> col_mat = nn::Conv2D::reshape_im2mat(img);
+  REQUIRE(is_close_mat(base, col_mat, EPSILON_FLT));
+}
