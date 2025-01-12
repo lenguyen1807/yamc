@@ -1,6 +1,8 @@
 #ifndef ACTIVATION_H
 #define ACTIVATION_H
 
+#include <opencv2/core.hpp>
+
 #include "layer.h"
 
 namespace nn
@@ -10,6 +12,7 @@ class ReLU : public Layer<float>
 {
 public:
   IMPLEMENT_LAYER(float);
+  IMPLEMENT_LAYER_IM();
 };
 
 class Softmax : public Layer<float>

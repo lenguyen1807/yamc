@@ -37,6 +37,16 @@ TEST_CASE("ReLU backward", "[back_relu]")
   REQUIRE(is_close_mat(relu.backward(input), base, EPSILON_FLT));
 }
 
+TEST_CASE("ReLU Image forward", "[relu_im]")
+{
+  // TODO:
+}
+
+TEST_CASE("ReLU Image backward", "[back_relu_im]")
+{
+  // TODO:
+}
+
 TEST_CASE("Softmax", "[softmax]")
 {
   nn::matrix<float> input({

@@ -26,12 +26,25 @@ TEST_CASE("im2col on 1x5x5 image, stride = 2, padding = 0, kernel = 3",
   REQUIRE(is_close_mat(base, col_mat, EPSILON_FLT));
 }
 
+TEST_CASE("col2im on 1x5x5 image, stride = 2, padding = 0, kernel = 3",
+          "[col2im-1x5x5-2-0-3]")
+{
+  // NOTE THAT: col2im don't have to reverse that im2col did
+  // https://stackoverflow.com/questions/51703367/col2im-implementation-in-convnet
+}
+
 // TODO: Implement more test cases to ensure im2col and col2im function work
 // correctly (hope so)
 
-TEST_CASE("reshpae matrix to image", "reshape_mat2im")
+TEST_CASE("reshape matrix to image", "reshape_mat2im")
 {
-  // TODO: Implement later
+  cv::Mat img(5, 5, CV_32F);
+  for (size_t i = 0; i < 5; i++)
+    for (size_t j = 0; j < 5; j++)
+      img.at<float>(i, j) = i + j;
+
+  nn::matrix<float> col_mat = nn::Conv2D::reshape_im2mat(img);
+  REQUIRE(is_close_im(nn::Conv2D::reshape_mat2im(col_mat, 1, 5, 5), img));
 }
 
 TEST_CASE("reshape image to matrix", "reshape_im2mat")
@@ -40,7 +53,6 @@ TEST_CASE("reshape image to matrix", "reshape_im2mat")
   for (size_t i = 0; i < 5; i++)
     for (size_t j = 0; j < 5; j++)
       img.at<float>(i, j) = i + j;
-  std::cout << img << "\n";
 
   nn::matrix<float> base({{0, 1, 2, 3, 4, 1, 2, 3, 4, 5, 2, 3, 4,
                            5, 6, 3, 4, 5, 6, 7, 4, 5, 6, 7, 8}});

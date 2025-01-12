@@ -30,7 +30,7 @@ int main()
 
   /* -------------- Train model data --------------- */
   // create model, loss and optimizer
-  MLP model(24 * 24, 10);
+  MLP model(28 * 28, 10);
   nn::CrossEntropyLoss loss_fn(&model);
   nn::SGD optim(&model, 0.001f);
 

@@ -1,11 +1,17 @@
 #ifndef LAYER_H
 #define LAYER_H
 
+#include <opencv2/core/mat.hpp>
+
 #include "matrix.h"
 
 #define IMPLEMENT_LAYER(T) \
   matrix<T> forward(const matrix<T>& input) override; \
   matrix<T> backward(const matrix<T>& grad) override;
+
+#define IMPLEMENT_LAYER_IM() \
+  cv::Mat forward(const cv::Mat& input) override; \
+  cv::Mat backward(const cv::Mat& grad) override;
 
 namespace nn
 {
@@ -29,9 +35,11 @@ public:
 
   Layer() = default;
 
-  /* Virtual method */
-  virtual matrix<T> forward(const matrix<T>& input) { return input; };
-  virtual matrix<T> backward(const matrix<T>& grad) { return grad; };
+  virtual matrix<T> forward(const matrix<T>& input) { return input; }
+  virtual matrix<T> backward(const matrix<T>& grad) { return grad; }
+  virtual cv::Mat forward(const cv::Mat& input) { return input; }
+  virtual cv::Mat backward(const cv::Mat& grad) { return grad; }
+
   virtual void print_stats() {}
   virtual void zero_grad() {}
   virtual void accept_optimizer(Optimizer* optim) {}
@@ -50,6 +58,7 @@ public:
   bool train = false;
 
 protected:
+  cv::Mat m_im;
   matrix<T> m_input;
   // Some layer doesn't need this
   matrix<float> m_W;

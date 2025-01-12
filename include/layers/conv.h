@@ -29,8 +29,7 @@ public:
   - Because my matrix isn't a 3d array
   - So I need to use OpenCV to handle image
   */
-  cv::Mat forward(const cv::Mat& input);
-  cv::Mat backward(const cv::Mat& grad);
+  IMPLEMENT_LAYER_IM();
   void accept_optimizer(Optimizer* optim) override;
 
   /*
@@ -38,7 +37,6 @@ public:
   some matrix operations
   - So we use two method called im2col and col2im
   - You can see an example of im2col here:
-    + https://ieeexplore.ieee.org/document/9114626/
     + https://hackmd.io/@machine-learning/blog-post-cnnumpy-fast
   - And some implementation of im2col and col2im
     + https://github.com/pjreddie/darknet/blob/master/src/im2col.c
@@ -85,8 +83,6 @@ public:
   static matrix<float> reshape_im2mat(const cv::Mat& im);
 
 public:
-  // Reimplement input from layer
-  cv::Mat m_im;
   ConvParams m_params;
 };
 };  // namespace nn

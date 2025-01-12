@@ -12,13 +12,14 @@ class AvgPool2D : public Layer<float>
 {
 public:
   AvgPool2D(size_t kernel_size, size_t stride, size_t padding = 0);
+  IMPLEMENT_LAYER_IM();
 
-  cv::Mat forward(const cv::Mat& input);
-  cv::Mat backward(const cv::Mat& grad);
+private:
+  matrix<float> reshape_grad_to_col(const cv::Mat& grad_channel);
 
 private:
   ConvParams m_params;
-  cv::Mat m_input;
+  std::vector<matrix<float>> m_input_cols;
 };
 };  // namespace nn
 

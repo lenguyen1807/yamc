@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <cstdlib>
 #include <iostream>
 #include <random>
 #include <stdexcept>
@@ -465,6 +466,19 @@ public:
 
     return res;
   }
+
+  // return a column vector with value from start -> end-1
+  static matrix<T> arrange(const T& start, const T& end)
+  {
+    size_t range = std::abs(start - end);
+    matrix<T> res(range, 1);
+
+    for (size_t i = 0; i < range; i++) {
+      res.data[i] = start + i;
+    }
+
+    return res;
+  };
 
 private:
   void check_dim(const matrix<T>& mat) const
