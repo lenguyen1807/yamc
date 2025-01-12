@@ -53,6 +53,12 @@ cv::Mat AvgPool2D::backward(const cv::Mat& grad)
   std::tie(output_h, output_w) =
       Conv2D::calculate_output_size(m_input.rows, m_input.cols, m_params);
 
+  // #ifdef __DEBUGGING__
+  //   std::cout << "GradFull(" << grad.channels() << "," << grad.rows << ","
+  //             << grad.cols << ")\n";
+  //   std::cout << "InputCols(" << m_input_cols.size() << ")\n";
+  // #endif
+
   // Split gradient by channels
   std::vector<cv::Mat> grad_splits;
   cv::split(grad, grad_splits);
@@ -64,29 +70,36 @@ cv::Mat AvgPool2D::backward(const cv::Mat& grad)
     // Reshape gradient to match the pooling output format
     matrix<float> grad_col = reshape_grad_to_col(grad_splits[c]);
 
+    // #ifdef __DEBUGGING__
+    //     std::cout << "Grad(" << grad_col.rows << "," << grad_col.cols <<
+    //     ")\n"; std::cout << "Input(" << m_input_cols[c].rows << "," <<
+    //     m_input_cols[c].cols
+    //               << ")\n";
+    // #endif
+
     // Distribute gradient evenly to all elements in each pooling window (with
     // scale)
+    // TODO: Fix index bugs here
     matrix<float> dX_col(m_input_cols[c].rows, m_input_cols[c].cols);
-    for (size_t i = 0; i < grad_col.cols; ++i) {
-      float grad_val = grad_col.data[i] * scale;
-      for (size_t j = 0; j < m_params.ker_h * m_params.ker_w; ++j) {
-        dX_col.data[j * grad_col.cols + i] = grad_val;
+    for (size_t col = 0; col < grad_col.cols; ++col) {
+      float grad_val = grad_col.data[col] * scale;
+      for (size_t row = 0; row < m_input_cols[c].rows; ++row) {
+        dX_col.data[row * grad_col.cols + col] = grad_val;
       }
     }
 
     // Convert back to image format
     cv::Mat grad_channel = Conv2D::col2im(dX_col,
                                           1,  // single channel
-                                          m_input.rows,
-                                          m_input.cols,
+                                          m_im.rows,
+                                          m_im.cols,
                                           m_params.ker_h,
                                           m_params.ker_w,
                                           m_params.stride_h,
                                           m_params.stride_w,
                                           m_params.pad_h,
                                           m_params.pad_w);
-
-    dX_per_channels.push_back(grad_channel);
+    dX_per_channels.push_back(grad_channel.clone());
   }
 
   cv::Mat dX;
@@ -98,7 +111,6 @@ matrix<float> AvgPool2D::reshape_grad_to_col(const cv::Mat& grad_channel)
 {
   matrix<float> col(1, grad_channel.rows * grad_channel.cols);
   size_t i, j;
-#pragma omp parallel for private(i, j)
   for (i = 0; i < grad_channel.rows; ++i) {
     for (j = 0; j < grad_channel.cols; ++j) {
       col.data[i * grad_channel.cols + j] = grad_channel.at<float>(i, j);

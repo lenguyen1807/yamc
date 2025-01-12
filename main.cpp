@@ -32,7 +32,7 @@ int main()
   // training block
   {
     // training and testing
-    for (size_t epoch = 1; epoch <= 2; epoch++) {
+    for (size_t epoch = 1; epoch <= 1; epoch++) {
       float train_correct {};
       float test_correct {};
       float train_loss {};
