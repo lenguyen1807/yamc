@@ -142,74 +142,31 @@ cv::Mat Conv2D::col2im(const matrix<float> data_im,
                        size_t pad_h,
                        size_t pad_w)
 {
-  // Calculate output dimensions
-  size_t height_col = (height + 2 * pad_h - kernel_h) / stride_h + 1;
-  size_t width_col = (width + 2 * pad_w - kernel_w) / stride_w + 1;
+  size_t height_col, width_col;
+  std::tie(height_col, width_col) = Conv2D::calculate_output_size(
+      data_im.rows,
+      data_im.cols,
+      {kernel_h, kernel_w, pad_h, pad_w, stride_h, stride_w});
+  size_t channels_col = channels * kernel_h * kernel_w;
 
-  // Create output image with zeros
   cv::Mat output = cv::Mat::zeros(height, width, CV_32FC(channels));
 
-  // For each channel
-  for (size_t c_out = 0; c_out < channels; ++c_out) {
-    // For each kernel element
-    for (size_t kernel_row = 0; kernel_row < kernel_h; ++kernel_row) {
-      for (size_t kernel_col = 0; kernel_col < kernel_w; ++kernel_col) {
-        size_t channel_offset =
-            (c_out * kernel_h * kernel_w + kernel_row * kernel_w + kernel_col);
-
-        // For each position in the output
-        for (size_t h = 0; h < height_col; ++h) {
-          for (size_t w = 0; w < width_col; ++w) {
-            size_t h_pad = h * stride_h - pad_h + kernel_row;
-            size_t w_pad = w * stride_w - pad_w + kernel_col;
-
-            if (h_pad < height && w_pad < width) {
-              // Get value from cols matrix
-              size_t col_idx =
-                  (channel_offset * height_col + h) * width_col + w;
-              float value = data_im.data[col_idx];
-
-              // Add to the appropriate position in output
-              if (output.channels() == 1) {
-                output.at<float>(h_pad, w_pad) += value;
-              } else {
-                output.ptr<float>(h_pad, w_pad)[c_out] += value;
-              }
-            }
-          }
-        }
+  for (size_t c = 0; c < channels_col; ++c) {
+    size_t w_offset = c % kernel_w;
+    size_t h_offset = (c / kernel_w) % kernel_h;
+    size_t c_im = c / kernel_h / kernel_w;
+    for (size_t h = 0; h < height_col; ++h) {
+      for (size_t w = 0; w < width_col; ++w) {
+        size_t h_im = h_offset + h * stride_h;
+        size_t w_im = w_offset + w * stride_w;
+        size_t col_index = (c * height_col + h) * width_col + w;
+        float val = data_im.data[col_index];
+        Conv2D::add_pixel_col2im(output, h_im, w_im, pad_h, pad_w, c_im, val);
       }
     }
   }
 
   return output;
-
-  // size_t height_col, width_col;
-  // std::tie(height_col, width_col) = Conv2D::calculate_output_size(
-  //     data_im.rows,
-  //     data_im.cols,
-  //     {kernel_h, kernel_w, pad_h, pad_w, stride_h, stride_w});
-  // size_t channels_col = channels * kernel_h * kernel_w;
-
-  // cv::Mat output = cv::Mat::zeros(height, width, CV_32FC(channels));
-
-  // for (size_t c = 0; c < channels_col; ++c) {
-  //   size_t w_offset = c % kernel_w;
-  //   size_t h_offset = (c / kernel_w) % kernel_h;
-  //   size_t c_im = c / kernel_h / kernel_w;
-  //   for (size_t h = 0; h < height_col; ++h) {
-  //     for (size_t w = 0; w < width_col; ++w) {
-  //       size_t h_im = h_offset + h * stride_h;
-  //       size_t w_im = w_offset + w * stride_w;
-  //       size_t col_index = (c * height_col + h) * width_col + w;
-  //       float val = data_im.data[col_index];
-  //       Conv2D::add_pixel_col2im(output, h_im, w_im, pad_h, pad_w, c_im,
-  //       val);
-  //     }
-  //   }
-  // }
-
-  // return output;
 }
 
 float Conv2D::get_pixel_im2col(const cv::Mat& data_im,
@@ -277,37 +234,6 @@ cv::Mat Conv2D::reshape_mat2im(const matrix<float>& im,
   }
 
   return output;
-
-  // NOTE: This trick is risky af
-  // /*
-  // Because OpenCV do not support arbitrary channels so we need to use this
-  // trick: Create a vector then merge the vector together to create a single
-  // image
-  // */
-  // std::vector<cv::Mat> output_full;
-
-  // for (size_t c = 0; c < channels; c++) {
-  //   cv::Mat output_single(height, width, CV_32FC1);
-
-  //   // Find index of each row in 1D vector
-  //   /* NOTE: From the first approach, I use a temporary vector to store
-  //   std::vector<float> vec = {output.data.begin() ..., ...};
-  //   But this is absolutely because res will be destroyed and output_single
-  //   will lost data */
-  //   float* dst = output_single.ptr<float>(0);
-  //   std::copy(im.data.begin() + c * im.cols,
-  //             im.data.begin() + (c + 1) * im.cols,
-  //             dst);
-
-  //   // Add image to vector
-  //   // NOTE: We need to copy opencv image with clone (dont emplace it
-  //   directly) output_full.emplace_back(output_single.clone());
-  // }
-
-  // cv::Mat output_result(height, width, CV_32FC(channels));
-  // cv::merge(output_full, output_result);
-
-  // return output_result;
 }
 
 matrix<float> Conv2D::reshape_im2mat(const cv::Mat& im)

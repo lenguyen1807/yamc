@@ -12,8 +12,6 @@ public:
 
   nn::matrix<float> forward(const cv::Mat& image);
   void backward(const nn::matrix<float>& grad);
-
-private:
 };
 
 #endif  // LENET5_H

@@ -53,12 +53,6 @@ cv::Mat AvgPool2D::backward(const cv::Mat& grad)
   std::tie(output_h, output_w) =
       Conv2D::calculate_output_size(m_input.rows, m_input.cols, m_params);
 
-  // #ifdef __DEBUGGING__
-  //   std::cout << "GradFull(" << grad.channels() << "," << grad.rows << ","
-  //             << grad.cols << ")\n";
-  //   std::cout << "InputCols(" << m_input_cols.size() << ")\n";
-  // #endif
-
   // Split gradient by channels
   std::vector<cv::Mat> grad_splits;
   cv::split(grad, grad_splits);
@@ -69,13 +63,6 @@ cv::Mat AvgPool2D::backward(const cv::Mat& grad)
   for (size_t c = 0; c < grad_splits.size(); ++c) {
     // Reshape gradient to match the pooling output format
     matrix<float> grad_col = reshape_grad_to_col(grad_splits[c]);
-
-    // #ifdef __DEBUGGING__
-    //     std::cout << "Grad(" << grad_col.rows << "," << grad_col.cols <<
-    //     ")\n"; std::cout << "Input(" << m_input_cols[c].rows << "," <<
-    //     m_input_cols[c].cols
-    //               << ")\n";
-    // #endif
 
     // Distribute gradient evenly to all elements in each pooling window (with
     // scale)
