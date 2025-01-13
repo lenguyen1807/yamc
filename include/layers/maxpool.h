@@ -1,6 +1,8 @@
 #ifndef MAXPOOL_H
 #define MAXPOOL_H
 
+#include <vector>
+
 #include "helper.h"
 #include "layer.h"
 
@@ -15,6 +17,8 @@ public:
 
 private:
   ConvParams m_params;
+  std::vector<matrix<float>> m_input_cols;
+  std::vector<std::vector<size_t>> m_max_idx_full;
 };
 };  // namespace nn
 

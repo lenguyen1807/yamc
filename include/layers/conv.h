@@ -81,6 +81,7 @@ public:
                                 size_t height,
                                 size_t width);
   static matrix<float> reshape_im2mat(const cv::Mat& im);
+  static matrix<float> reshape_grad_to_col(const cv::Mat& grad_channel);
 
 public:
   ConvParams m_params;

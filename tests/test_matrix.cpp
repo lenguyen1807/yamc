@@ -143,4 +143,27 @@ TEST_CASE("Mean axis=1", "[mean-axis=1]")
   REQUIRE(is_close_mat(mat1.mean(1), base, EPSILON_FLT));
 }
 
+TEST_CASE("Max axis=0", "[max-axis=0]")
+{
+  nn::matrix<float> mat1({
+      {1.f, 2.f},
+      {2.f, 4.f},
+  });
+  nn::matrix<float> base({{2.f, 4.f}});
+  REQUIRE(is_close_mat(mat1.max(0), base, EPSILON_FLT));
+}
+
+TEST_CASE("Max axis=1", "[max-axis=1]")
+{
+  nn::matrix<float> mat1({
+      {1.f, 2.f},
+      {2.f, 4.f},
+  });
+  nn::matrix<float> base({
+      {2.f},
+      {4.f},
+  });
+  REQUIRE(is_close_mat(mat1.max(1), base, EPSILON_FLT));
+}
+
 // TODO: Add more tests later

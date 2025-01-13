@@ -4,6 +4,7 @@
 #include "data/CIFAR10.h"
 #include "loss.h"
 #include "models/lenet5.h"
+#include "models/vgg16.h"
 #include "optimizer.h"
 
 int main()
@@ -24,8 +25,8 @@ int main()
 
   /* -------------- Train model data --------------- */
 
-  // The image input for LeNet5 should be 32x32
-  LeNet5 model(3, 10);
+  // The image input from CIFAR should be 32x32
+  VGG16 model(3, 10);
   nn::CrossEntropyLoss loss_fn(&model);
   nn::SGD optim(&model, 0.001f);
 
@@ -38,51 +39,52 @@ int main()
       float train_loss {};
       float test_loss {};
 
-      std::cout << "------------------ Training -----------------\n";
+      // std::cout << "------------------ Training -----------------\n";
 
-      auto start = high_resolution_clock::now();
-      size_t img_idx = 0;
-      model.train();
+      // auto start = high_resolution_clock::now();
+      // size_t img_idx = 0;
+      // model.train();
 
-      for (const auto& img : dataset.train_set) {
-        // forward pass
-        auto logits = model.forward(img->data);
+      // for (const auto& img : dataset.train_set) {
+      //   // forward pass
+      //   auto logits = model.forward(img->data);
 
-        // calculate loss
-        float loss = loss_fn(logits, img->label);
-        train_loss += loss;
+      //   // calculate loss
+      //   float loss = loss_fn(logits, img->label);
+      //   train_loss += loss;
 
-        // calculate accuracy
-        int pred_label = loss_fn.get_pred().arg_max();
-        int true_label = img->label.arg_max();
-        train_correct += (pred_label == true_label) ? 1.0f : 0.0f;
+      //   // calculate accuracy
+      //   int pred_label = loss_fn.get_pred().arg_max();
+      //   int true_label = img->label.arg_max();
+      //   train_correct += (pred_label == true_label) ? 1.0f : 0.0f;
 
-        // backward pass
-        model.backward(loss_fn.get_loss_grad());
+      //   // backward pass
+      //   model.backward(loss_fn.get_loss_grad());
 
-        // update weight
-        optim.step();
+      //   // update weight
+      //   optim.step();
 
-        // zero all gradients for next iteration
-        model.zero_grad();
+      //   // zero all gradients for next iteration
+      //   model.zero_grad();
 
-        std::cout << "Finish train image no." << img_idx + 1 << " with loss "
-                  << loss << "\n";
-        img_idx++;
-      }
+      //   std::cout << "Finish train image no." << img_idx + 1 << " with loss "
+      //             << loss << "\n";
+      //   img_idx++;
+      // }
 
-      std::cout << "Epoch: " << epoch << "\n"
-                << "Train accuracy: "
-                << train_correct / static_cast<float>(dataset.train_set.size())
-                << "\n"
-                << "Average train loss: "
-                << train_loss / static_cast<float>(dataset.train_set.size())
-                << "\n";
+      // std::cout << "Epoch: " << epoch << "\n"
+      //           << "Train accuracy: "
+      //           << train_correct /
+      //           static_cast<float>(dataset.train_set.size())
+      //           << "\n"
+      //           << "Average train loss: "
+      //           << train_loss / static_cast<float>(dataset.train_set.size())
+      //           << "\n";
 
-      auto end = high_resolution_clock::now();
-      duration<float, std::milli> time = end - start;
-      std::cout << "Traing data time: " << time.count() / 60000.0
-                << " minutes\n";
+      // auto end = high_resolution_clock::now();
+      // duration<float, std::milli> time = end - start;
+      // std::cout << "Traing data time: " << time.count() / 60000.0
+      //           << " minutes\n";
 
       std::cout << "------------------ Testing -----------------\n";
 

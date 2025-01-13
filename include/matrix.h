@@ -5,6 +5,7 @@
 #include <cassert>
 #include <cstdlib>
 #include <iostream>
+#include <limits>
 #include <random>
 #include <stdexcept>
 #include <vector>
@@ -269,6 +270,35 @@ public:
       return this->sum(0) / static_cast<T>(rows);
     } else if (axis == 1) {
       return this->sum(1) / static_cast<T>(cols);
+    } else {
+      throw std::invalid_argument("Only support axis = 1 or axis = 0");
+    }
+  }
+
+  matrix<T> max_by_row()
+  {
+    matrix<T> res(rows, 1);
+    for (size_t i = 0; i < rows; i++) {
+      // max element is always first element of rows
+      T max_elm = std::numeric_limits<T>::min();
+      for (size_t j = 0; j < cols; j++) {
+        if (data[i * cols + j] > max_elm) {
+          max_elm = data[i * cols + j];
+        }
+      }
+      res.data[i] = max_elm;
+    }
+    return res;
+  }
+
+  matrix<T> max(size_t axis = 0)
+  {
+    if (axis == 0) {
+      // HACK: This will decrease performance so far
+      // Need to reimplement but I'm too lazy
+      return this->t().max_by_row().t();
+    } else if (axis == 1) {
+      return this->max_by_row();
     } else {
       throw std::invalid_argument("Only support axis = 1 or axis = 0");
     }

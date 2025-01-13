@@ -15,9 +15,6 @@ public:
   IMPLEMENT_LAYER_IM();
 
 private:
-  matrix<float> reshape_grad_to_col(const cv::Mat& grad_channel);
-
-private:
   ConvParams m_params;
   std::vector<matrix<float>> m_input_cols;
 };

@@ -255,3 +255,15 @@ matrix<float> Conv2D::reshape_im2mat(const cv::Mat& im)
 
   return res;
 }
+
+matrix<float> Conv2D::reshape_grad_to_col(const cv::Mat& grad_channel)
+{
+  matrix<float> col(1, grad_channel.rows * grad_channel.cols);
+  size_t i, j;
+  for (i = 0; i < grad_channel.rows; ++i) {
+    for (j = 0; j < grad_channel.cols; ++j) {
+      col.data[i * grad_channel.cols + j] = grad_channel.at<float>(i, j);
+    }
+  }
+  return col;
+}

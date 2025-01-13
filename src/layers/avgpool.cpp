@@ -43,7 +43,7 @@ cv::Mat AvgPool2D::forward(const cv::Mat& input)
     result = matrix<float>::vstack(result, mean_imcol);
   }
 
-  return Conv2D::reshape_mat2im(result, input.channels(), output_h, output_w);
+  return Conv2D::reshape_mat2im(result, m_im.channels(), output_h, output_w);
 }
 
 cv::Mat AvgPool2D::backward(const cv::Mat& grad)
@@ -62,11 +62,10 @@ cv::Mat AvgPool2D::backward(const cv::Mat& grad)
 
   for (size_t c = 0; c < grad_splits.size(); ++c) {
     // Reshape gradient to match the pooling output format
-    matrix<float> grad_col = reshape_grad_to_col(grad_splits[c]);
+    matrix<float> grad_col = Conv2D::reshape_grad_to_col(grad_splits[c]);
 
     // Distribute gradient evenly to all elements in each pooling window (with
     // scale)
-    // TODO: Fix index bugs here
     matrix<float> dX_col(m_input_cols[c].rows, m_input_cols[c].cols);
     for (size_t col = 0; col < grad_col.cols; ++col) {
       float grad_val = grad_col.data[col] * scale;
@@ -92,16 +91,4 @@ cv::Mat AvgPool2D::backward(const cv::Mat& grad)
   cv::Mat dX;
   cv::merge(dX_per_channels, dX);
   return dX;
-}
-
-matrix<float> AvgPool2D::reshape_grad_to_col(const cv::Mat& grad_channel)
-{
-  matrix<float> col(1, grad_channel.rows * grad_channel.cols);
-  size_t i, j;
-  for (i = 0; i < grad_channel.rows; ++i) {
-    for (j = 0; j < grad_channel.cols; ++j) {
-      col.data[i * grad_channel.cols + j] = grad_channel.at<float>(i, j);
-    }
-  }
-  return col;
 }
