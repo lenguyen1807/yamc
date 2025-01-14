@@ -2,7 +2,6 @@
 #define CONV_H
 
 #include <cstddef>
-#include <utility>
 
 #include <opencv2/core.hpp>
 #include <opencv2/core/mat.hpp>
@@ -50,32 +49,17 @@ public:
                               size_t stride_w,
                               size_t pad_h,
                               size_t pad_w);
-  static float get_pixel_im2col(const cv::Mat& data_im,
-                                size_t h_im,
-                                size_t w_im,
-                                size_t pad_h,
-                                size_t pad_w,
-                                size_t channel);
-  static cv::Mat col2im(const matrix<float> data_im,
-                        size_t channels,
-                        size_t height,
-                        size_t width,
-                        size_t kernel_h,
-                        size_t kernel_w,
-                        size_t stride_h,
-                        size_t stride_w,
-                        size_t pad_h,
-                        size_t pad_w);
-  static void add_pixel_col2im(cv::Mat& data_im,
-                               size_t h_im,
-                               size_t w_im,
-                               size_t pad_h,
-                               size_t pad_w,
-                               size_t channel,
-                               float val);
-  static std::pair<size_t, size_t> calculate_output_size(size_t input_h,
-                                                         size_t input_w,
-                                                         ConvParams params);
+  static void col2im(cv::Mat& im,
+                     const matrix<float>& data_im,
+                     size_t kernel_h,
+                     size_t kernel_w,
+                     size_t stride_h,
+                     size_t stride_w,
+                     size_t pad_h,
+                     size_t pad_w);
+  static ConvOutputSize calculate_output_size(size_t input_h,
+                                              size_t input_w,
+                                              ConvParams params);
   static cv::Mat reshape_mat2im(const matrix<float>& im,
                                 size_t channels,
                                 size_t height,

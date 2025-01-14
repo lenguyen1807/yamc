@@ -37,5 +37,5 @@ cv::Mat Flatten::backward_im(const matrix<float>& mat)
     }
   }
 
-  return output;
+  return output.clone();
 }

@@ -3,7 +3,6 @@
 
 #include "data/CIFAR10.h"
 #include "loss.h"
-#include "models/lenet5.h"
 #include "models/vgg16.h"
 #include "optimizer.h"
 
@@ -25,7 +24,8 @@ int main()
 
   /* -------------- Train model data --------------- */
 
-  LeNet5 model(3, 10);
+  // The image input from CIFAR should be 32x32
+  VGG16 model(3, 10);
   nn::CrossEntropyLoss loss_fn(&model);
   nn::SGD optim(&model, 0.001f);
 
@@ -66,11 +66,8 @@ int main()
         // zero all gradients for next iteration
         model.zero_grad();
 
-        if ((img_idx + 1) % 500 == 0) {
-          std::cout << "Finish train image no." << img_idx + 1
-                    << " with loss: " << loss << "\n";
-        }
-
+        std::cout << "Finish train image no." << img_idx + 1 << " with loss "
+                  << loss << "\n";
         img_idx++;
       }
 

@@ -14,6 +14,13 @@ struct ConvParams
   size_t stride_h;
   size_t stride_w;
 };
+
+struct ConvOutputSize
+{
+  size_t h;
+  size_t w;
+};
+
 };  // namespace nn
 
 /* Initialize */

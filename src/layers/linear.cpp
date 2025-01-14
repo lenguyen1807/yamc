@@ -10,7 +10,6 @@ Linear::Linear(size_t input_size, size_t output_size, bool rand_init, bool bias)
   if (rand_init) {
     // https://cs231n.github.io/neural-networks-2/#init
     m_W = he_initialize(output_size, input_size);
-    ::print_stats(m_W, "weight_initialization");
   }
 }
 

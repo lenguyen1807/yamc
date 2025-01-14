@@ -12,21 +12,24 @@ Maxpool2D::Maxpool2D(size_t kernel_size, size_t stride, size_t padding)
 
 cv::Mat Maxpool2D::forward(const cv::Mat& input)
 {
-  m_im = input.clone();
+  // We dont need to store whole image
+  m_im_height = input.rows;
+  m_im_width = input.cols;
+  m_im_channels = input.channels();
+  m_input_cols.clear();
+  m_max_idx_full.clear();
 
   // Calculate output size
-  size_t output_h, output_w;
-  std::tie(output_h, output_w) =
-      Conv2D::calculate_output_size(input.rows, input.cols, m_params);
+  auto output_size =
+      Conv2D::calculate_output_size(m_im_height, m_im_width, m_params);
 
   /* Then we find max value for each columns in each channels for image
    * (through im2col) (seperate by rows). The easiest implementation is
    * splitting image to each channel, then process each channel seperately so I
    * won't care about the index so much */
   std::vector<cv::Mat> input_splits;
-  cv::split(m_im, input_splits);
+  cv::split(input, input_splits);
   matrix<float> result;
-  m_input_cols.clear();
 
   for (const auto& img : input_splits) {
     auto im_col = Conv2D::im2col(img,
@@ -50,8 +53,7 @@ cv::Mat Maxpool2D::forward(const cv::Mat& input)
     matrix<float> max_imcol(1, im_col.cols);
 
     // Store max index
-    std::vector<size_t> max_idx_channel;
-    max_idx_channel.reserve(im_col.cols);
+    std::vector<size_t> max_idx_channel(im_col.cols);
 
     // Find max value and index
     for (size_t j = 0; j < im_col.cols; j++) {
@@ -75,27 +77,28 @@ cv::Mat Maxpool2D::forward(const cv::Mat& input)
     result = matrix<float>::vstack(result, max_imcol);
   }
 
-  return Conv2D::reshape_mat2im(result, m_im.channels(), output_h, output_w);
+  return Conv2D::reshape_mat2im(
+      result, m_im_channels, output_size.h, output_size.w);
 }
 
 cv::Mat Maxpool2D::backward(const cv::Mat& grad)
 {
-  // Calculate dimensions
-  size_t output_h, output_w;
-  std::tie(output_h, output_w) =
-      Conv2D::calculate_output_size(m_input.rows, m_input.cols, m_params);
-
   // Split gradient by channels
   std::vector<cv::Mat> grad_splits;
   cv::split(grad, grad_splits);
 
-  std::vector<cv::Mat> dX_per_channels;
+  cv::Mat dX(m_im_height, m_im_width, CV_32FC(m_im_channels));
 
+  std::vector<cv::Mat> dX_channels;
+  cv::split(dX, dX_channels);
+
+  // merge 4 channels each time
   for (size_t c = 0; c < grad_splits.size(); ++c) {
     // Reshape gradient to match the pooling output format
     matrix<float> grad_col = Conv2D::reshape_grad_to_col(grad_splits[c]);
 
-    // Different from Average pooling, we only distribute gradient to max index
+    // Different from Average pooling, we only distribute gradient to max
+    // index
     matrix<float> dX_col(m_input_cols[c].rows, m_input_cols[c].cols);
     for (size_t col = 0; col < grad_col.cols; ++col) {
       size_t max_idx = m_max_idx_full[c][col];
@@ -103,20 +106,17 @@ cv::Mat Maxpool2D::backward(const cv::Mat& grad)
     }
 
     // Convert back to image format
-    cv::Mat grad_channel = Conv2D::col2im(dX_col,
-                                          1,  // single channel
-                                          m_im.rows,
-                                          m_im.cols,
-                                          m_params.ker_h,
-                                          m_params.ker_w,
-                                          m_params.stride_h,
-                                          m_params.stride_w,
-                                          m_params.pad_h,
-                                          m_params.pad_w);
-    dX_per_channels.push_back(grad_channel.clone());
+    Conv2D::col2im(dX_channels[c],
+                   dX_col,
+                   m_params.ker_h,
+                   m_params.ker_w,
+                   m_params.stride_h,
+                   m_params.stride_w,
+                   m_params.pad_h,
+                   m_params.pad_w);
   }
 
-  cv::Mat dX;
-  cv::merge(dX_per_channels, dX);
-  return dX;
+  cv::merge(dX_channels, dX);
+
+  return dX.clone();
 }

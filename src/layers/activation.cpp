@@ -20,13 +20,17 @@ matrix<float> ReLU::backward(const matrix<float>& grad)
 
 cv::Mat ReLU::forward(const cv::Mat& input)
 {
+  // We need to deallocate previous input to avoid memory full
+  if (!m_im.empty()) {
+    m_im.release();
+  }
+
   m_im = input.clone();
 
   // We have to traverse image and apply ReLU for each pixel
   // I know this implementation is suck but we have no choice :<
 
-  cv::Mat result =
-      cv::Mat::zeros(input.rows, input.cols, CV_32FC(input.channels()));
+  cv::Mat result = cv::Mat(input.rows, input.cols, CV_32FC(input.channels()));
 
 #pragma omp parallel for collapse(3)
   for (size_t c = 0; c < input.channels(); c++) {
@@ -41,7 +45,7 @@ cv::Mat ReLU::forward(const cv::Mat& input)
     }
   }
 
-  return result;
+  return result.clone();
 }
 
 cv::Mat ReLU::backward(const cv::Mat& grad)
@@ -52,8 +56,7 @@ cv::Mat ReLU::backward(const cv::Mat& grad)
     throw std::invalid_argument("gradient should be equal to input image");
   }
 
-  cv::Mat result =
-      cv::Mat::zeros(grad.rows, grad.cols, CV_32FC(grad.channels()));
+  cv::Mat result = cv::Mat(grad.rows, grad.cols, CV_32FC(grad.channels()));
 
 #pragma omp parallel for collapse(3)
   for (size_t c = 0; c < grad.channels(); c++) {
@@ -70,7 +73,7 @@ cv::Mat ReLU::backward(const cv::Mat& grad)
     }
   }
 
-  return result;
+  return result.clone();
 }
 
 /* Softmax */

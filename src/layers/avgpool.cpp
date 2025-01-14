@@ -12,11 +12,13 @@ AvgPool2D::AvgPool2D(size_t kernel_size, size_t stride, size_t padding)
 
 cv::Mat AvgPool2D::forward(const cv::Mat& input)
 {
-  m_im = input.clone();
+  m_im_channels = input.channels();
+  m_im_height = input.rows;
+  m_im_width = input.cols;
+  m_input_cols.clear();
 
   // Calculate output size
-  size_t output_h, output_w;
-  std::tie(output_h, output_w) =
+  auto output_size =
       Conv2D::calculate_output_size(input.rows, input.cols, m_params);
 
   /* Then we find average value for each columns in each channels for image
@@ -24,9 +26,8 @@ cv::Mat AvgPool2D::forward(const cv::Mat& input)
    * splitting image to each channel, then process each channel seperately so I
    * won't care about the index so much */
   std::vector<cv::Mat> input_splits;
-  cv::split(m_im, input_splits);
+  cv::split(input, input_splits);
   matrix<float> result;
-  m_input_cols.clear();
 
   for (const auto& img : input_splits) {
     auto im_col = Conv2D::im2col(img,
@@ -43,22 +44,21 @@ cv::Mat AvgPool2D::forward(const cv::Mat& input)
     result = matrix<float>::vstack(result, mean_imcol);
   }
 
-  return Conv2D::reshape_mat2im(result, m_im.channels(), output_h, output_w);
+  return Conv2D::reshape_mat2im(
+      result, m_im_channels, output_size.h, output_size.w);
 }
 
 cv::Mat AvgPool2D::backward(const cv::Mat& grad)
 {
-  // Calculate dimensions
-  size_t output_h, output_w;
-  std::tie(output_h, output_w) =
-      Conv2D::calculate_output_size(m_input.rows, m_input.cols, m_params);
-
   // Split gradient by channels
   std::vector<cv::Mat> grad_splits;
   cv::split(grad, grad_splits);
   float scale = 1.0f / static_cast<float>(m_params.ker_h * m_params.ker_w);
 
-  std::vector<cv::Mat> dX_per_channels;
+  cv::Mat dX(m_im_height, m_im_width, CV_32FC(grad_splits.size()));
+
+  std::vector<cv::Mat> dX_channels;
+  cv::split(dX, dX_channels);
 
   for (size_t c = 0; c < grad_splits.size(); ++c) {
     // Reshape gradient to match the pooling output format
@@ -68,27 +68,23 @@ cv::Mat AvgPool2D::backward(const cv::Mat& grad)
     // scale)
     matrix<float> dX_col(m_input_cols[c].rows, m_input_cols[c].cols);
     for (size_t col = 0; col < grad_col.cols; ++col) {
-      float grad_val = grad_col.data[col] * scale;
       for (size_t row = 0; row < m_input_cols[c].rows; ++row) {
-        dX_col.data[row * grad_col.cols + col] = grad_val;
+        dX_col.data[row * grad_col.cols + col] = grad_col.data[col] * scale;
       }
     }
 
     // Convert back to image format
-    cv::Mat grad_channel = Conv2D::col2im(dX_col,
-                                          1,  // single channel
-                                          m_im.rows,
-                                          m_im.cols,
-                                          m_params.ker_h,
-                                          m_params.ker_w,
-                                          m_params.stride_h,
-                                          m_params.stride_w,
-                                          m_params.pad_h,
-                                          m_params.pad_w);
-    dX_per_channels.push_back(grad_channel.clone());
+    Conv2D::col2im(dX_channels[c],
+                   dX_col,
+                   m_params.ker_h,
+                   m_params.ker_w,
+                   m_params.stride_h,
+                   m_params.stride_w,
+                   m_params.pad_h,
+                   m_params.pad_w);
   }
 
-  cv::Mat dX;
-  cv::merge(dX_per_channels, dX);
-  return dX;
+  cv::merge(dX_channels, dX);
+
+  return dX.clone();
 }

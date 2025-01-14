@@ -41,7 +41,13 @@ public:
   virtual cv::Mat backward(const cv::Mat& grad) { return grad; }
 
   virtual void print_stats() {}
-  virtual void zero_grad() {}
+  virtual void zero_grad()
+  {
+    m_dW.fill(0.f);
+    if (bias) {
+      m_db.fill(0.f);
+    }
+  }
   virtual void accept_optimizer(Optimizer* optim) {}
   virtual ~Layer() {};
 
@@ -58,7 +64,12 @@ public:
   bool train = false;
 
 protected:
-  cv::Mat m_im;
+  // for image
+  size_t m_im_height;
+  size_t m_im_width;
+  size_t m_im_channels;
+  cv::Mat m_im;  // activation layer need this
+  // for matrix
   matrix<T> m_input;
   // Some layer doesn't need this
   matrix<float> m_W;

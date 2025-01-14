@@ -46,7 +46,7 @@ VGG16::VGG16(size_t input_channels, size_t output_size)
   add<10, nn::Conv2D>(/*input_channels=*/128,
                       /*output_channels=*/256,
                       /*stride=*/1,
-                      /*kernel_size=*/2,
+                      /*kernel_size=*/3,
                       /*padding=*/1);
   add<11, nn::ReLU>();
   add<12, nn::Conv2D>(/*input_channels=*/256,
@@ -63,7 +63,7 @@ VGG16::VGG16(size_t input_channels, size_t output_size)
   add<15, nn::Conv2D>(/*input_channels=*/256,
                       /*output_channels=*/512,
                       /*stride=*/1,
-                      /*kernel_size=*/2,
+                      /*kernel_size=*/3,
                       /*padding=*/1);
   add<16, nn::ReLU>();
   add<17, nn::Conv2D>(/*input_channels=*/512,
@@ -139,12 +139,12 @@ void VGG16::backward(const nn::matrix<float>& grad)
 {
   /* Backward Classifier */
   nn::matrix<float> result = layers.at(27)->backward(grad);  // Linear
-  result = layers.at(26)->forward(result);  // ReLU
-  result = layers.at(25)->forward(result);  // Linear
-  result = layers.at(24)->forward(result);  // Dropout
-  result = layers.at(23)->forward(result);  // ReLU
-  result = layers.at(22)->forward(result);  // Linear
-  result = layers.at(21)->forward(result);  // Dropout
+  result = layers.at(26)->backward(result);  // ReLU
+  result = layers.at(25)->backward(result);  // Linear
+  result = layers.at(24)->backward(result);  // Dropout
+  result = layers.at(23)->backward(result);  // ReLU
+  result = layers.at(22)->backward(result);  // Linear
+  result = layers.at(21)->backward(result);  // Dropout
 
   /* Backward Flatten */
   cv::Mat im =

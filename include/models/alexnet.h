@@ -10,10 +10,10 @@ class AlexNet : public nn::Module
 {
 public:
   /*
-  - We will use base implementation of AlexNet with 10 class output
-  - https://en.wikipedia.org/wiki/AlexNet
+  - We will use small implementation of AlexNet with 10 class output and 32x32
+  image
   */
-  AlexNet();
+  AlexNet(size_t input_channels, size_t output_size);
 
   // Now declare forward and backward function
   nn::matrix<float> forward(const cv::Mat& input);

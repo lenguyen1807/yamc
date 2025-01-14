@@ -13,12 +13,12 @@ brew install opencv
 
 ### What this code has
 
-- **Layer**: Convolution, Linear, Dropout, Maxpooling, AvgPooling.
-- **Model**: MLP, AlexNet (Ongoing), VGG-16, LeNet5.
+- **Layer**: Convolution, Linear, Dropout, Maxpooling, AvgPooling, Local Response Normalization.
+- **Model**: MLP, AlexNet, VGG-16, LeNet5.
 - **Activation**: ReLU, LeakyReLU, Softmax.
 - **Loss function**: Cross Entropy Loss.
 - **Optimizer**: SGD (Stochastic Gradient Descent).
-- Flexible code structures.
+- Flexible code structures. But because of my machine VGG-16 and AlexNet can do inference only (do not have enough memory for training and also my implementation is not optimized well).
 - Below is example of VGG-16:
 
 ```cpp
