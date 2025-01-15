@@ -49,32 +49,28 @@ cv::Mat Maxpool2D::forward(const cv::Mat& input)
      * auto max_imcol = im_col.max(0);
      */
 
-    // Store max value
-    matrix<float> max_imcol(1, im_col.cols);
+    // Find maximum values and their indices for each window
+    matrix<float> max_vals(1, im_col.cols);
+    std::vector<size_t> max_idx(im_col.cols);
 
-    // Store max index
-    std::vector<size_t> max_idx_channel(im_col.cols);
+    for (size_t col = 0; col < im_col.cols; ++col) {
+      float max_val = im_col.data[col];
+      size_t max_index = 0;
 
-    // Find max value and index
-    for (size_t j = 0; j < im_col.cols; j++) {
-      // Max is first element of columns
-      float max_elm = im_col.data[j];
-      size_t max_idx = j;
-
-      for (size_t i = 0; i < im_col.rows; i++) {
-        float val = im_col.data[i * im_col.cols + j];
-        if (val > max_elm) {
-          max_elm = val;
-          max_idx = i;
+      for (size_t row = 0; row < im_col.rows; ++row) {
+        float current = im_col.data[row * im_col.cols + col];
+        if (current > max_val) {
+          max_val = current;
+          max_index = row;
         }
       }
 
-      max_imcol.data[j] = max_elm;
-      max_idx_channel[j] = max_idx;
+      max_vals.data[col] = max_val;
+      max_idx[col] = max_index;
     }
 
-    m_max_idx_full.emplace_back(max_idx_channel);
-    result = matrix<float>::vstack(result, max_imcol);
+    m_max_idx_full.emplace_back(max_idx);
+    result = matrix<float>::vstack(result, max_vals);
   }
 
   return Conv2D::reshape_mat2im(
@@ -92,7 +88,6 @@ cv::Mat Maxpool2D::backward(const cv::Mat& grad)
   std::vector<cv::Mat> dX_channels;
   cv::split(dX, dX_channels);
 
-  // merge 4 channels each time
   for (size_t c = 0; c < grad_splits.size(); ++c) {
     // Reshape gradient to match the pooling output format
     matrix<float> grad_col = Conv2D::reshape_grad_to_col(grad_splits[c]);
