@@ -26,8 +26,7 @@ struct CIFAR10Data
   void load_test_im();
 
   std::unordered_map<std::string, size_t> label_map;
-  std::vector<std::unique_ptr<image>> train_set;
-  std::vector<std::unique_ptr<image>> test_set;
+  std::vector<std::unique_ptr<image>> dataset;
 };
 
 #endif  // CIFAR10_H

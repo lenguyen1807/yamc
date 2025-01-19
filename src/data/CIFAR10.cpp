@@ -20,8 +20,11 @@ CIFAR10Data::CIFAR10Data(bool train)
 
   // then load image for training and testing
   // TODO: Implement this in multithread for faster performance
-  load_train_im();
-  load_test_im();
+  if (train) {
+    load_train_im();
+  } else {
+    load_test_im();
+  }
 }
 
 void CIFAR10Data::load_label()
@@ -54,12 +57,12 @@ void CIFAR10Data::load_label()
 
 void CIFAR10Data::load_test_im()
 {
-  load_im(std::string(CIFAR_DIR) + "test", test_set);
+  load_im(std::string(CIFAR_DIR) + "test", dataset);
 }
 
 void CIFAR10Data::load_train_im()
 {
-  load_im(std::string(CIFAR_DIR) + "train", train_set);
+  load_im(std::string(CIFAR_DIR) + "train", dataset);
 }
 
 void CIFAR10Data::load_im(const std::string& path,

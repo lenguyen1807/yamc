@@ -67,15 +67,6 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(Catch2)
 
-# Include libcurl to fetch data
-# FetchContent_Declare(curl
-# 	URL https://curl.se/download/curl-8.10.0.tar.gz
-# 	DOWNLOAD_EXTRACT_TIMESTAMP true
-# 	OVERRIDE_FIND_PACKAGE
-# )
-# FetchContent_MakeAvailable(curl)
-# find_package(curl)
-
 if(APPLE)
     # Link Apple framework
     find_library(ACCELERATE_LIBRARY Accelerate)
@@ -116,9 +107,9 @@ add_executable(${PROJECT_NAME} main.cpp)
 target_link_libraries(${PROJECT_NAME} PRIVATE mnist-cpp_lib)
 
 if(APPLE)
-    SET(CMAKE_CXX_FLAGS "-O2 -DNDEBUG -ftree-vectorize -L/opt/homebrew/opt/libomp/lib -I/opt/homebrew/opt/libomp/include -DACCELERATE_LAPACK_ILP64 -DACCELERATE_NEW_LAPACK")
+    SET(CMAKE_CXX_FLAGS "-O2 -ftree-vectorize -L/opt/homebrew/opt/libomp/lib -I/opt/homebrew/opt/libomp/include -DACCELERATE_LAPACK_ILP64 -DACCELERATE_NEW_LAPACK")
 else()
-    SET(CMAKE_CXX_FLAGS "-O2 -DNDEBUG -ftree-vectorize")
+    SET(CMAKE_CXX_FLAGS "-O2 -ftree-vectorize")
 endif()
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)

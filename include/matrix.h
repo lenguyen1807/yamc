@@ -498,7 +498,7 @@ public:
   }
 
   // return a column vector with value from start -> end-1
-  static matrix<T> arrange(const T& start, const T& end)
+  static matrix<T> arange(const T& start, const T& end)
   {
     size_t range = std::abs(start - end);
     matrix<T> res(range, 1);

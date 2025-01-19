@@ -1,11 +1,9 @@
 #include <chrono>
 #include <iostream>
 
-#include "data/CIFAR10.h"
+#include "data/TinyImageNet.h"
 #include "loss.h"
-#include "models/lenet5.h"
-#include "models/vgg16.h"
-#include "optimizer.h"
+#include "models/alexnet.h"
 
 int main()
 {
@@ -17,105 +15,41 @@ int main()
   /* -------------- Load data --------------- */
   auto start = high_resolution_clock::now();
 
-  CIFAR10Data dataset {};
+  TinyImageNetData test(false);
 
   auto end = high_resolution_clock::now();
   duration<float, std::milli> time = end - start;
   std::cout << "Load data time: " << time.count() / 60000.0 << " minutes\n";
 
-  /* -------------- Train model data --------------- */
+  /* -------------- Test model --------------- */
 
-  VGG16 model(3, 10);
+  AlexNet model(3, 200);
   nn::CrossEntropyLoss loss_fn(&model);
-  nn::SGD optim(&model, 0.01f);
 
-  // training block
-  {
-    // training and testing
-    for (size_t epoch = 1; epoch <= 1; epoch++) {
-      float train_correct {};
-      float test_correct {};
-      float train_loss {};
-      float test_loss {};
+  model.eval();
+  float test_loss {};
+  float test_correct {};
 
-      std::cout << "------------------ Training -----------------\n";
+  for (const auto& img : test.dataset) {
+    // forward pass
+    auto logits = model.forward(img->data);
 
-      auto start = high_resolution_clock::now();
-      size_t img_idx = 0;
-      model.train();
+    // calculate loss
+    float loss = loss_fn(logits, img->label);
+    test_loss += loss;
 
-      for (const auto& img : dataset.train_set) {
-        // forward pass
-        auto logits = model.forward(img->data);
+    // calculate accuracy
+    int pred_label = loss_fn.get_pred().arg_max();
+    int true_label = img->label.arg_max();
+    test_correct += (pred_label == true_label) ? 1.0f : 0.0f;
 
-        // calculate loss
-        float loss = loss_fn(logits, img->label);
-        train_loss += loss;
-
-        // calculate accuracy
-        int pred_label = loss_fn.get_pred().arg_max();
-        int true_label = img->label.arg_max();
-        train_correct += (pred_label == true_label) ? 1.0f : 0.0f;
-
-        // backward pass
-        model.backward(loss_fn.get_loss_grad());
-
-        // update weight
-        optim.step();
-
-        // zero all gradients for next iteration
-        model.zero_grad();
-
-        std::cout << "Finish train image no." << img_idx + 1 << " with loss "
-                  << loss << "\n";
-        img_idx++;
-      }
-
-      std::cout << "Epoch: " << epoch << "\n"
-                << "Train accuracy: "
-                << train_correct / static_cast<float>(dataset.train_set.size())
-                << "\n"
-                << "Average train loss: "
-                << train_loss / static_cast<float>(dataset.train_set.size())
-                << "\n";
-
-      auto end = high_resolution_clock::now();
-      duration<float, std::milli> time = end - start;
-      std::cout << "Traing data time: " << time.count() / 60000.0
-                << " minutes\n";
-
-      std::cout << "------------------ Testing -----------------\n";
-
-      start = high_resolution_clock::now();
-      model.eval();
-
-      for (const auto& img : dataset.test_set) {
-        // forward pass
-        auto logits = model.forward(img->data);
-
-        // calculate loss
-        float loss = loss_fn(logits, img->label);
-        test_loss += loss;
-
-        // calculate accuracy
-        int pred_label = loss_fn.get_pred().arg_max();
-        int true_label = img->label.arg_max();
-        test_correct += (pred_label == true_label) ? 1.0f : 0.0f;
-      }
-
-      std::cout << "Test accuracy: "
-                << test_correct / static_cast<float>(dataset.test_set.size())
-                << "\n"
-                << "Average test loss: "
-                << test_loss / static_cast<float>(dataset.test_set.size())
-                << "\n";
-
-      end = high_resolution_clock::now();
-      time = end - start;
-      std::cout << "Testing data time: " << time.count() / 60000.0
-                << " minutes\n";
-    }
+    std::cout << "Finish test image with loss: " << loss << "\n";
   }
+
+  std::cout << "Test accuracy: "
+            << test_correct / static_cast<float>(test.dataset.size()) << "\n"
+            << "Average test loss: "
+            << test_loss / static_cast<float>(test.dataset.size()) << "\n";
 
   return 0;
 }

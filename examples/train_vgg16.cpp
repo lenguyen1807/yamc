@@ -16,7 +16,8 @@ int main()
   /* -------------- Load data --------------- */
   auto start = high_resolution_clock::now();
 
-  CIFAR10Data dataset {};
+  CIFAR10Data train(true);
+  CIFAR10Data test(false);
 
   auto end = high_resolution_clock::now();
   duration<float, std::milli> time = end - start;
@@ -24,10 +25,9 @@ int main()
 
   /* -------------- Train model data --------------- */
 
-  // The image input from CIFAR should be 32x32
   VGG16 model(3, 10);
   nn::CrossEntropyLoss loss_fn(&model);
-  nn::SGD optim(&model, 0.001f);
+  nn::SGD optim(&model, 0.01f);
 
   // training block
   {
@@ -44,7 +44,7 @@ int main()
       size_t img_idx = 0;
       model.train();
 
-      for (const auto& img : dataset.train_set) {
+      for (const auto& img : train.dataset) {
         // forward pass
         auto logits = model.forward(img->data);
 
@@ -73,10 +73,10 @@ int main()
 
       std::cout << "Epoch: " << epoch << "\n"
                 << "Train accuracy: "
-                << train_correct / static_cast<float>(dataset.train_set.size())
+                << train_correct / static_cast<float>(train.dataset.size())
                 << "\n"
                 << "Average train loss: "
-                << train_loss / static_cast<float>(dataset.train_set.size())
+                << train_loss / static_cast<float>(train.dataset.size())
                 << "\n";
 
       auto end = high_resolution_clock::now();
@@ -89,7 +89,7 @@ int main()
       start = high_resolution_clock::now();
       model.eval();
 
-      for (const auto& img : dataset.test_set) {
+      for (const auto& img : test.dataset) {
         // forward pass
         auto logits = model.forward(img->data);
 
@@ -104,11 +104,10 @@ int main()
       }
 
       std::cout << "Test accuracy: "
-                << test_correct / static_cast<float>(dataset.test_set.size())
+                << test_correct / static_cast<float>(test.dataset.size())
                 << "\n"
                 << "Average test loss: "
-                << test_loss / static_cast<float>(dataset.test_set.size())
-                << "\n";
+                << test_loss / static_cast<float>(test.dataset.size()) << "\n";
 
       end = high_resolution_clock::now();
       time = end - start;

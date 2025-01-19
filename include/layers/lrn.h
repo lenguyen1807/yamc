@@ -1,6 +1,8 @@
 #ifndef LRN_H
 #define LRN_H
 
+#include <opencv2/core/mat.hpp>
+
 #include "layer.h"
 
 namespace nn
@@ -19,6 +21,10 @@ private:
   float m_beta;
   float m_k;
   size_t m_size;
+
+  cv::Mat m_im;
+  std::vector<cv::Mat> m_square_sum;
+  std::vector<cv::Mat> m_norm_factor;
 };
 }  // namespace nn
 
